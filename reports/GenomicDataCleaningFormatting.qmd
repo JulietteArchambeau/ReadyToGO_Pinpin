@@ -1,0 +1,321 @@
+---
+title: "Formatting and cleaning the genomic data"
+author: "Juliette Archambeau & Adélaïde Theraroz"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+number-sections: true
+format: 
+  html:
+    toc: true
+    toc-depth: 4
+    code-fold: true
+    page-layout: full
+embed-resources: true
+editor_options: 
+  chunk_output_type: console
+---
+
+<style type="text/css">
+body {
+   font-size: 15px;
+}
+code.r{
+  font-size: 11px;
+}
+pre {
+  font-size: 11px
+}
+
+table {
+  font-size: 10px
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(dev.args = list(png = list(type = "cairo")))
+knitr::opts_chunk$set(fig.width = 7,fig.height = 5,cache=F)
+options(width = 300)
+library(knitr)      # CRAN v1.26
+library(tidyverse)  # CRAN v1.3.0
+library(readxl)     # CRAN v1.3.1
+library(xtable)
+library(reshape2)
+library(kableExtra)
+library(magrittr)
+library(cowplot)
+library(rnaturalearth)
+library(raster)
+library(RColorBrewer)
+library(here)
+library(latex2exp)
+library(adegenet)
+
+# my own function for building tables in reports
+source(here("scripts/functions/kable_mydf.R"))
+```
+
+
+The genomic data are in `genepop` format. We load them and convert them to `genind` format using the `adegenet` R package.
+
+```{r LoadGenomicData, message=F, eval=T, results="hide"}
+geno <- read.genepop(here("data/genomic_data/POPGEN_FILTERED_Affx_GLOBAL.gen"))
+```
+
+In the `genind` object, allele counts can be extracted with `@tab`. In the `genind` object, allele counts are specified for all alleles at a given locus (i.e. one column per allele). 
+
+# Monomorphic SNPs
+
+We first remove the **monomorphic SNPs**, i.e. SNPs that have only one allele.
+
+```{r IdentifyingMonomorphicSNPs}
+# Transform to allele counts with individuals in columns and alleles in rows
+df <- as.data.frame(geno@tab) %>%  
+  t() %>% 
+  as.data.frame() %>% 
+  rownames_to_column("snp") %>% 
+  mutate(snp=str_sub(snp,1,-4))
+
+# Identifying duplicates, i.e. SNPs with different alleles
+dup <- df$snp[(duplicated(df$snp))]
+
+# Subseting monomorphic SNPs
+mono <- df %>% filter(! snp %in% dup)
+
+# Run the line below to check that the SNPs are really monomorphic (.i.e. they have one unique value)
+# apply(test[,-1],1,function(x) n_distinct(x,na.rm=T))
+```
+
+There are `r nrow(mono)` monomorphic SNPs. We remove them:
+
+```{r RemovingMonomorphicSNPs}
+df <- df %>% filter(!snp %in% mono$snp)
+```
+
+`r nrow(df)` left after removing the monomorphic SNPs.
+
+# Minor allele counts
+
+Then, we build a dataset with one row per locus, with only the counts of the minor allele (i.e. 0, 1, 2 or NA):
+
+```{r CalculateAlleleCounts, eval=F}
+df <- df %>%   group_by(snp) %>% 
+  group_split() %>% 
+  map_dfr(function(x){
+   x %>% 
+      mutate(MAC = rowSums(across(where(is.numeric)), na.rm=T)) %>% 
+      filter(MAC==min(MAC)) %>% 
+      `if`(nrow(.)>1 , slice(.,1), .) %>% # some loci have the same number of MAC, so we have to select only one allele as the minor allele
+      dplyr::select(-MAC)
+    }) 
+
+df %>% saveRDS(file=here("data/genomic_data/raw_allele_counts.rds"))
+```
+
+
+```{r LoadRawAlleleCounts}
+df <- readRDS(file=here("data/genomic_data/raw_allele_counts.rds"))
+df[1:10,1:10] %>%  kable_mydf()
+```
+
+
+We calculate for each SNPs the sum of the minor allele counts. 
+
+```{r MAC}
+sum_minor_allele <- df %>% 
+  column_to_rownames("snp") %>% 
+  t() %>% 
+  as_tibble() %>% 
+  sapply(function(x) sum(x,na.rm=T)) %>% 
+  as.data.frame() %>%
+  set_colnames(c("sum")) %>% 
+  rownames_to_column(var = "snp") %>% 
+  as_tibble() 
+
+low_mac <- sum_minor_allele %>% filter(sum %in% c(1,2))
+```
+
+The sum of the minor allele counts should be higher than 1 (i.e. we removed the monomorphic SNPs) and lower than the total number of individuals (N=`r ncol(df)-1`). We check that:
+
+```{r RangeMinorAlleleCounts}
+range(sum_minor_allele$sum)
+```
+
+The sum of the minor allele counts is equal to one or two for `r nrow(low_mac)` SNPs. <span style="color: orange;">Do you want to remove these SNPs? Their very low minor allele counts may be due to PCR or sequencing errors.</span>
+
+To remove them:
+
+
+```{r RemovingLowMACSNPs}
+# we remove the SNPs that one or two minor allele count
+df <- df %>% filter(!snp %in% low_mac$snp)
+```
+
+<span style="color: red;">There are `r nrow(df)` non-monomorphic SNPs left.</span>
+
+# Missing data per individual
+
+We then check the number of missing data per individual.
+
+```{r MissingDataPerIndividual, warning=F, fig.height=4,fig.width=6}
+tab <- df %>% 
+  column_to_rownames("snp") %>% 
+  as_tibble() %>% 
+  sapply(function(x) sum(is.na(x))*100/nrow(df)) %>% 
+  as.data.frame() %>%
+  set_colnames(c("na_freq")) %>% 
+  rownames_to_column(var = "individual") %>% 
+  as_tibble() %>% 
+  arrange(na_freq) %>% 
+  mutate(id=1:nrow(.))
+
+plot(tab$id,tab$na_freq,
+     pch=20,
+     xlab="Individual number",
+     ylab="Percentage of missing data per individual")
+```
+
+<span style="color: orange;">Which threshold do you want to use for the number of missing values per individual?</span>
+
+Some possible thresholds:
+
+  - `r nrow(tab[tab$na_freq<20,])` individuals have less than 20% missing data
+  - `r nrow(tab[tab$na_freq<18,])` individuals have less than 18% missing data
+  - `r nrow(tab[tab$na_freq<15,])` have less than 15% missing data
+
+```{r RemoveindividualMissingData}
+# Specifying the chosen threshold:
+threshold_NA_per_individual <- 18
+
+# Removing individuals with more than 18% missing data
+df <- df %>% dplyr::select(snp, tab[tab$na_freq<threshold_NA_per_individual,]$individual)
+```
+
+# Minor allele frequencies
+
+
+For the gene-environment association analyses, we want to remove *minor allele frequencies* (MAF).
+
+```{r MAF, warning=F, fig.height=4,fig.width=6}
+tab <- df %>% 
+  column_to_rownames("snp") %>% 
+  t() %>% 
+  as_tibble() %>% 
+  sapply(function(x) sum(x,na.rm=T)*100/(2*nrow(.))) %>% 
+  as.data.frame() %>%
+  set_colnames(c("MAF")) %>% 
+  rownames_to_column(var = "snp") %>% 
+  as_tibble() %>% 
+  arrange(MAF) %>% 
+  mutate(id=1:nrow(.))
+
+plot(tab$id,tab$MAF,
+     pch=20,
+     xlab="SNP number",
+     ylab="Minor allele frequencies")
+```
+
+```{r RmMissingDataMAF}
+# we remove SNPs with MAF < 1% 
+df <- df %>% filter(!snp %in% tab[tab$MAF<1,]$snp)
+```
+
+<span style="color: orange;">Which threshold do you want to use for the number of MAF?</span>
+
+
+For instance, if you remove SNPs that have MAF < 1%, there will be `r nrow(tab[tab$MAF<1,])` SNPs left.
+
+# Missing data per SNP
+
+We then look at the number of missing data per SNPs:
+
+```{r MissingDataPerSNP, warning=F, fig.height=4,fig.width=6}
+tab <- df %>% 
+  column_to_rownames("snp") %>%
+  t() %>% 
+  as_tibble() %>% 
+  sapply(function(x) sum(is.na(x))*100/nrow(.)) %>% 
+  as.data.frame() %>%
+  set_colnames(c("na_freq")) %>% 
+  rownames_to_column(var = "snp") %>% 
+  as_tibble() %>% 
+  arrange(na_freq) %>% 
+  mutate(id=1:nrow(.))
+
+plot(tab$id,tab$na_freq,
+     pch=20,
+     xlab="SNP number",
+     ylab="Percentage of missing data per SNP")
+```
+
+
+`r nrow(tab[tab$na_freq<20,])` SNPs have less than 20% missing data and `r nrow(tab[tab$na_freq<15,])` have less than 15% missing data.
+
+```{r RmSNPsWithHighPercentagesMissingData}
+# we keep the SNPs with less than 20% missing data
+df <- df %>% filter(snp %in% tab[tab$na_freq<20,]$snp)
+```
+
+<span style="color: orange;">Which threshold do you want to use for the number of missing values per SNP?</span>
+
+
+For instance, if you keep SNPs with less than 20% missing data, there will be `r nrow(df)` SNPs left in the dataset.
+
+# Filtering correlated SNPs
+
+<span style="color: orange;">Do you want to filter SNPs that are located on the same scaffold or not?</span>
+
+What I did in my paper: I identified candidate SNPs with gene-environment association analyses with a dataset not pruned and then, if two candidates were located on the same scaffold I keep one of them. 
+
+# Imputation of missing data
+
+We have to impute missing values to run the gene-environment association analyses.
+
+For that, you can impute the missing values based on the most common alleles in the main gene pool of the individual. However, in the dataset you sent to me with the STRUCTURE outputs, I only found the proportion of assignment for each population, do you have the proportion of assignment at the individual level? Or do you want to perform the imputation at the population level? 
+
+```{r PropAssignementSTRUCTURE}
+prop <- read_delim(here("data/genomic_data/DATA_GENEPOOLS.csv"), delim = ";", escape_double = FALSE, trim_ws = TRUE, show_col_types = FALSE) 
+
+prop[1:10,] %>%  kable_mydf()
+```
+
+Another option is to use the function `impute` of the `LEA` R package to do the imputation: it uses ancestry and genotype frequency information (estimated with the `snmf` function, which estimates admixture coefficients) to do the imputation.
+
+<span style="color: orange;">How do you want to impute the missing values?</span>
+
+
+# Exporting the genomic data
+
+
+## Individual-level allele counts
+To run BayPass and LFMM, genomic data have to be allele counts at the individual level, so below we export the allele counts:
+
+
+```{r ExportAlleleCounts}
+df %>% saveRDS(here("data/genomic_data/imputed_allele_counts.rds"))
+```
+
+
+## Population allele frequencies
+
+To run the RDA and GF, the genomic data have to be population allele frequencies.
+
+```{r ExportAlleleFrequencies}
+df_freq <- df %>% 
+  column_to_rownames("snp") %>%
+  t() %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var="pop") %>% 
+  mutate(pop=str_sub(pop,1,3)) %>% # check that the population name corresponds to the first three letters of each individual name  
+  group_by(pop) %>% 
+  summarise_all(~sum(., na.rm = TRUE)/((n()-sum(is.na(.)))*2))
+
+df_freq[1:10,1:10] %>%  kable_mydf()
+
+df_freq %>% saveRDS(here("data/genomic_data/imputed_allele_frequencies.rds"))
+```
+
+
+Comment: The `COM` population is in the `genepop` file but not in the outputs from STRUCTURE, why?
+
+```{r COMpopulation}
+#setdiff(df_freq$pop,prop$POP)
+```
