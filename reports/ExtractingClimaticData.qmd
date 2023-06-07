@@ -141,6 +141,7 @@ Here are the GCM names:
 
 ```{r GCMnames}
 gcm_names <- list.files(here(path_to_rasters)) %>%  str_sub(5,-35) %>% setdiff("")
+gcm_names 
 ```
 
 

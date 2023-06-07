@@ -8,3 +8,6 @@
 ## REPORTS
 
 -   [GenomicDataCleaningFormatting.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/GenomicDataCleaningFormatting.html) Formatting and filtering of the genomic data and imputation of missing data.
+
+
+-   [ExtractingClimaticData.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/ExtractingClimaticData.html) Extracting reference and future climates at the location of the populations.
