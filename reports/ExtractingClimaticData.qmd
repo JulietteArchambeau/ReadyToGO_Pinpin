@@ -1,0 +1,168 @@
+---
+title: "Extracting climatic data - Population locations"
+author: "Juliette Archambeau & Adélaïde Theraroz"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+number-sections: true
+format: 
+  html:
+    toc: true
+    toc-depth: 4
+    code-fold: true
+    page-layout: full
+embed-resources: true
+editor_options: 
+  chunk_output_type: console
+---
+
+<style type="text/css">
+body {
+   font-size: 15px;
+}
+code.r{
+  font-size: 11px;
+}
+pre {
+  font-size: 11px
+}
+
+table {
+  font-size: 10px
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=F)
+options(width = 300)
+library(knitr)      # CRAN v1.26
+library(kableExtra) # CRAN v1.1.0
+library(tidyverse)  # CRAN v1.3.0
+library(janitor)
+library(purrr)
+library(SPEI)
+library(raster)
+library(magrittr)
+library(here)
+library(readxl)
+
+# my own functions
+source(here("scripts/functions/kable_mydf.R")) # building tables
+source(here("scripts/functions/extract_climatedt_metadata.R")) # extracting meta data of the climatic variables in ClimateDT
+source(here("scripts/functions/extract_clim_from_rasters.R")) # extracting climatic values from rasters
+```
+
+# Set of climatic variables
+
+The set of climatic variables has been selected in Archambeau et al. (2023): see the [associated Github repository](https://github.com/JulietteArchambeau/GOPredEvalPinpin) and [details on the climatic variable selection](https://juliettearchambeau.github.io/GOPredEvalPinpin/0_FormattingPopulationCoordinatesElevationClimateData.html). Here is the set of selected climatic variables:
+
+```{r ListSelectedClimVariables}
+clim_var <- c("bio1","bio12","bio15","bio3","bio4","SHM")
+
+extract_climatedt_metadata(var_clim = clim_var) %>% 
+  dplyr::select(label,description,unit) %>% 
+  set_colnames(str_to_title(colnames(.))) %>% 
+  kable_mydf(font_size = 12)
+```
+
+# Population coordinates
+
+We load the population coordinates.
+
+```{r LoadPopulationCoordinates}
+pop_coord <-  read_csv(here("data/population_information_pinaster_feb2023.csv"),show_col_types = FALSE)
+
+pop_coord %>% kable_mydf()
+```
+
+
+This dataset contains `r nrow(pop_coord)` populations.
+
+We are going to keep only the population for which we have genomic information. So, we load the population-level allele frequencies and extract the population names:
+
+```{r PopToKeep}
+pop_tokeep <- readRDS(here("data/genomic_data/imputed_allele_frequencies.rds")) %>% pull(pop)
+```
+
+The genomic data contain `r length(pop_tokeep)` populations.
+
+In the dataset with the population coordinates, we create a column `pop` which corresponds to the first three letters of the population codes (column `code`). Note that the populations `VAL-CORSICA` and `VAL-VMQ` will be attributed the same names but this is not a problem as the `VAL` populations are not among the populations used in Adé's paper.
+
+```{r ExtractPopCodesThreeLetters}
+pop_coord <- pop_coord %>% mutate(pop = str_sub(code,1,3))
+```
+
+We then keep only the populations whose names correspond to the population names in the genomic data (which correspond to the first three letters of the individual names, which should correspond to the population of each individual, I hope!). Adé, please check that this step is ok!
+
+```{r FilterPops}
+pop_coord <- pop_coord %>% 
+  filter(pop %in% pop_tokeep) %>% 
+  arrange(pop)
+
+pop_coord %>% kable_mydf()
+```
+
+We create spatial points for the population coordinates:
+
+```{r PopCoordToSpatialPoints}
+pop_sp <- pop_coord %>% 
+  dplyr::select(longitude,latitude) %>% 
+  SpatialPoints(proj4string=CRS("+proj=longlat +datum=WGS84 +no_defs"))
+```
+
+# Extracting past climates
+
+We extract the climatic variables for the reference period 1901-1950.
+
+```{r ExtractRefenceClimate}
+path_to_rasters <- "C:/Users/jularc/Documents/GOPredEvalPinpin/GOPredEvalPinpin/data/ClimaticData/ClimateDTRasters/"
+  
+  
+clim_ref <- lapply(clim_var, function(x) {
+  
+  x %>% 
+    extract_clim_from_rasters(x=x,
+                              period="1901-1950",
+                              pop_coord=pop_sp,
+                              path=path_to_rasters)}) %>% 
+  setNames(clim_var) %>% 
+  as_tibble() %>% 
+  mutate(pop=pop_coord$pop) %>% 
+  dplyr::select(pop,everything())
+
+clim_ref %>% kable_mydf()
+
+clim_ref %>% saveRDS(here("data/climatic_data/reference_climate_population_locations.rds"))
+```
+
+# Extracting future climates 
+
+We extract the future climate for the different global climate models (GCMs), for the Shared Socioeconomic Pathway (SSP) 3-7.0 and the reference period 2041-2070. 
+
+Here are the GCM names:
+
+```{r GCMnames}
+gcm_names <- list.files(here(path_to_rasters)) %>%  str_sub(5,-35) %>% setdiff("")
+```
+
+
+```{r ExtractingFutureClimate}
+# List of dataframes (one for each GCM) with the climatic variables in columns
+clim_fut <- lapply(gcm_names, function(gcm){
+  
+lapply(clim_var, function(x) extract_clim_from_rasters(x=x, 
+                                                       gcm=gcm, 
+                                                       period="2041-2070", 
+                                                       ssp="ssp370",
+                                                       pop_coord=pop_sp,
+                                                       path=path_to_rasters)) %>% 
+  setNames(clim_var) %>% 
+  as_tibble() %>% 
+  mutate(pop=pop_coord$pop,
+         gcm=gcm) %>% 
+  dplyr::select(pop,gcm,everything())
+
+}) %>% 
+  setNames(gcm_names)
+
+clim_fut %>% saveRDS(here("data/climatic_data/future_climate_population_locations.rds"))
+```
+
