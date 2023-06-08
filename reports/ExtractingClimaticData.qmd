@@ -38,7 +38,6 @@ library(kableExtra) # CRAN v1.1.0
 library(tidyverse)  # CRAN v1.3.0
 library(janitor)
 library(purrr)
-library(SPEI)
 library(raster)
 library(magrittr)
 library(here)
@@ -65,32 +64,32 @@ extract_climatedt_metadata(var_clim = clim_var) %>%
 
 # Population coordinates
 
-We load the population coordinates.
+We load the dataset with the population coordinates and we create a column `pop` which corresponds to the first three letters of the population codes (column `code`).
+
+**Warning:** 
+
+  - In previous studies, the VAL-VMQ population in Spain was referred as VAL. However, in the present study, this population is named VMQ and the VAL population corresponds to the VAL-CORSICA population.
+  
+  - The MAU and MAUbis populations are very close, but with an altitude difference of almost 300m. We assign them different codes: MAU for the MAU population and MAB for the MAUbis population.
 
 ```{r LoadPopulationCoordinates}
-pop_coord <-  read_csv(here("data/population_information_pinaster_feb2023.csv"),show_col_types = FALSE)
+pop_coord <-  read_csv(here("data/population_information_pinaster_feb2023.csv"),show_col_types = FALSE) %>% 
+  mutate(pop = case_when(code=="VAL-VMQ" ~"VMQ",
+                         code== "MAUbis/FR-PP-12" ~ "MAB",
+                         TRUE ~ str_sub(code,1,3)))
 
 pop_coord %>% kable_mydf()
 ```
 
-
 This dataset contains `r nrow(pop_coord)` populations.
 
-We are going to keep only the population for which we have genomic information. So, we load the population-level allele frequencies and extract the population names:
+We are going to keep only the populations that will be used in the following analyses (i.e. GEAs and genomic offset estimation). For that, we load the population-level allele frequencies that will be used in the GEA analyses and we extract the population names:
 
 ```{r PopToKeep}
 pop_tokeep <- readRDS(here("data/genomic_data/imputed_allele_frequencies.rds")) %>% pull(pop)
 ```
 
 The genomic data contain `r length(pop_tokeep)` populations.
-
-In the dataset with the population coordinates, we create a column `pop` which corresponds to the first three letters of the population codes (column `code`). Note that the populations `VAL-CORSICA` and `VAL-VMQ` will be attributed the same names but this is not a problem as the `VAL` populations are not among the populations used in Adé's paper.
-
-```{r ExtractPopCodesThreeLetters}
-pop_coord <- pop_coord %>% mutate(pop = str_sub(code,1,3))
-```
-
-We then keep only the populations whose names correspond to the population names in the genomic data (which correspond to the first three letters of the individual names, which should correspond to the population of each individual, I hope!). Adé, please check that this step is ok!
 
 ```{r FilterPops}
 pop_coord <- pop_coord %>% 

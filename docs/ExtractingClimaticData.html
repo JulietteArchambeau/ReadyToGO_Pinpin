@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Juliette Archambeau &amp; Adélaïde Theraroz">
-<meta name="dcterms.date" content="2023-06-07">
+<meta name="dcterms.date" content="2023-06-08">
 
 <title>Extracting climatic data - Population locations</title>
 <style>
@@ -2852,7 +2852,7 @@ border: 0;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 7, 2023</p>
+      <p class="date">June 8, 2023</p>
     </div>
   </div>
     
@@ -2938,13 +2938,21 @@ font-size: 10px
 </section>
 <section id="population-coordinates" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Population coordinates</h1>
-<p>We load the population coordinates.</p>
+<p>We load the dataset with the population coordinates and we create a column <code>pop</code> which corresponds to the first three letters of the population codes (column <code>code</code>).</p>
+<p><strong>Warning:</strong></p>
+<ul>
+<li><p>In previous studies, the VAL-VMQ population in Spain was referred as VAL. However, in the present study, this population is named VMQ and the VAL population corresponds to the VAL-CORSICA population.</p></li>
+<li><p>The MAU and MAUbis populations are very close, but with an altitude difference of almost 300m. We assign them different codes: MAU for the MAU population and MAB for the MAUbis population.</p></li>
+</ul>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="ot">&lt;-</span>  <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">&quot;data/population_information_pinaster_feb2023.csv&quot;</span>),<span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="sc">%&gt;%</span> <span class="fu">kable_mydf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="ot">&lt;-</span>  <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">&quot;data/population_information_pinaster_feb2023.csv&quot;</span>),<span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop =</span> <span class="fu">case_when</span>(code<span class="sc">==</span><span class="st">&quot;VAL-VMQ&quot;</span> <span class="sc">~</span><span class="st">&quot;VMQ&quot;</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                         code<span class="sc">==</span> <span class="st">&quot;MAUbis/FR-PP-12&quot;</span> <span class="sc">~</span> <span class="st">&quot;MAB&quot;</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                         <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">str_sub</span>(code,<span class="dv">1</span>,<span class="dv">3</span>)))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="sc">%&gt;%</span> <span class="fu">kable_mydf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 
@@ -2957,6 +2965,7 @@ font-size: 10px
    <th style="text-align:right;"> longitude </th>
    <th style="text-align:left;"> country </th>
    <th style="text-align:right;"> altitude </th>
+   <th style="text-align:left;"> pop </th>
   </tr>
  </thead>
 <tbody>
@@ -2967,6 +2976,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.92 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1259 </td>
+   <td style="text-align:left;"> CAV </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -2975,6 +2985,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.42 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 792 </td>
+   <td style="text-align:left;"> FPN </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -2983,6 +2994,7 @@ font-size: 10px
    <td style="text-align:right;"> 8.70 </td>
    <td style="text-align:left;"> Tunisia </td>
    <td style="text-align:right;"> 76 </td>
+   <td style="text-align:left;"> TAB </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -2991,6 +3003,7 @@ font-size: 10px
    <td style="text-align:right;"> 10.74 </td>
    <td style="text-align:left;"> Italy </td>
    <td style="text-align:right;"> 84 </td>
+   <td style="text-align:left;"> TUS </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -2999,6 +3012,7 @@ font-size: 10px
    <td style="text-align:right;"> -8.67 </td>
    <td style="text-align:left;"> Portugal </td>
    <td style="text-align:right;"> 396 </td>
+   <td style="text-align:left;"> VCA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3007,6 +3021,7 @@ font-size: 10px
    <td style="text-align:right;"> 8.68 </td>
    <td style="text-align:left;"> Tunisia </td>
    <td style="text-align:right;"> 201 </td>
+   <td style="text-align:left;"> ABA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3015,6 +3030,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.08 </td>
    <td style="text-align:left;"> Morocco </td>
    <td style="text-align:right;"> 830 </td>
+   <td style="text-align:left;"> ADE </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3023,6 +3039,7 @@ font-size: 10px
    <td style="text-align:right;"> -0.33 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 733 </td>
+   <td style="text-align:left;"> AHI </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3031,6 +3048,7 @@ font-size: 10px
    <td style="text-align:right;"> 0.02 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 520 </td>
+   <td style="text-align:left;"> BEN </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3039,6 +3057,7 @@ font-size: 10px
    <td style="text-align:right;"> -2.93 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1059 </td>
+   <td style="text-align:left;"> CAZ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3047,6 +3066,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.42 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1058 </td>
+   <td style="text-align:left;"> COD </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3055,6 +3075,7 @@ font-size: 10px
    <td style="text-align:right;"> -0.95 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 925 </td>
+   <td style="text-align:left;"> CPA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3063,6 +3084,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.12 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 458 </td>
+   <td style="text-align:left;"> EST </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3071,6 +3093,7 @@ font-size: 10px
    <td style="text-align:right;"> -4.25 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 913 </td>
+   <td style="text-align:left;"> FUE </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3079,6 +3102,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.30 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 630 </td>
+   <td style="text-align:left;"> GAU </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3087,6 +3111,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.35 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1367 </td>
+   <td style="text-align:left;"> GEA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3095,6 +3120,7 @@ font-size: 10px
    <td style="text-align:right;"> 3.03 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 243 </td>
+   <td style="text-align:left;"> GIR </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3103,6 +3129,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.18 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 958 </td>
+   <td style="text-align:left;"> JUB </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3111,6 +3138,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.38 </td>
    <td style="text-align:left;"> Morocco </td>
    <td style="text-align:right;"> 480 </td>
+   <td style="text-align:left;"> KUD </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3119,6 +3147,7 @@ font-size: 10px
    <td style="text-align:right;"> -2.22 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1171 </td>
+   <td style="text-align:left;"> MAZ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3127,6 +3156,7 @@ font-size: 10px
    <td style="text-align:right;"> -0.64 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1148 </td>
+   <td style="text-align:left;"> MTG </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3135,6 +3165,7 @@ font-size: 10px
    <td style="text-align:right;"> -3.54 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 753 </td>
+   <td style="text-align:left;"> ONA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3143,6 +3174,7 @@ font-size: 10px
    <td style="text-align:right;"> 12.00 </td>
    <td style="text-align:left;"> Italy </td>
    <td style="text-align:right;"> 733 </td>
+   <td style="text-align:left;"> PAN </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3151,6 +3183,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.46 </td>
    <td style="text-align:left;"> Morocco </td>
    <td style="text-align:right;"> 90 </td>
+   <td style="text-align:left;"> PCI </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3159,6 +3192,7 @@ font-size: 10px
    <td style="text-align:right;"> 0.87 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 560 </td>
+   <td style="text-align:left;"> PDL </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3167,6 +3201,7 @@ font-size: 10px
    <td style="text-align:right;"> -3.37 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1414 </td>
+   <td style="text-align:left;"> PEZ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3175,6 +3210,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.38 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 724 </td>
+   <td style="text-align:left;"> PFQ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3183,6 +3219,7 @@ font-size: 10px
    <td style="text-align:right;"> -2.58 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1046 </td>
+   <td style="text-align:left;"> QUI </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3191,6 +3228,7 @@ font-size: 10px
    <td style="text-align:right;"> -2.43 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1039 </td>
+   <td style="text-align:left;"> RIO </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3199,6 +3237,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.56 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 817 </td>
+   <td style="text-align:left;"> SAH </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3207,6 +3246,7 @@ font-size: 10px
    <td style="text-align:right;"> -0.50 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 746 </td>
+   <td style="text-align:left;"> SCD </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3215,6 +3255,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.20 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 888 </td>
+   <td style="text-align:left;"> SIN </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3223,6 +3264,7 @@ font-size: 10px
    <td style="text-align:right;"> -3.09 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 895 </td>
+   <td style="text-align:left;"> SOB </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3231,6 +3273,7 @@ font-size: 10px
    <td style="text-align:right;"> -3.98 </td>
    <td style="text-align:left;"> Morocco </td>
    <td style="text-align:right;"> 1500 </td>
+   <td style="text-align:left;"> TAJ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3239,6 +3282,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.62 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 272 </td>
+   <td style="text-align:left;"> TAL </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3247,6 +3291,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.21 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 988 </td>
+   <td style="text-align:left;"> TBY </td>
   </tr>
   <tr>
    <td style="text-align:left;"> B4ESTnew </td>
@@ -3255,6 +3300,7 @@ font-size: 10px
    <td style="text-align:right;"> -0.40 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 639 </td>
+   <td style="text-align:left;"> VMA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3263,6 +3309,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.49 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 526 </td>
+   <td style="text-align:left;"> ALT </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3271,6 +3318,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.46 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 559 </td>
+   <td style="text-align:left;"> ARM </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3279,6 +3327,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.12 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 663 </td>
+   <td style="text-align:left;"> ARN </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3287,6 +3336,7 @@ font-size: 10px
    <td style="text-align:right;"> -2.88 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 925 </td>
+   <td style="text-align:left;"> BAY </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3295,6 +3345,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.66 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1090 </td>
+   <td style="text-align:left;"> BON </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3303,6 +3354,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.42 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 164 </td>
+   <td style="text-align:left;"> CAD </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3311,6 +3363,7 @@ font-size: 10px
    <td style="text-align:right;"> -4.28 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 844 </td>
+   <td style="text-align:left;"> CAR </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3319,6 +3372,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.98 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 158 </td>
+   <td style="text-align:left;"> CAS </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3327,6 +3381,7 @@ font-size: 10px
    <td style="text-align:right;"> -4.49 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1079 </td>
+   <td style="text-align:left;"> CEN </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3335,6 +3390,7 @@ font-size: 10px
    <td style="text-align:right;"> -4.50 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 784 </td>
+   <td style="text-align:left;"> COC </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3343,6 +3399,7 @@ font-size: 10px
    <td style="text-align:right;"> -3.95 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 904 </td>
+   <td style="text-align:left;"> COM </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3351,6 +3408,7 @@ font-size: 10px
    <td style="text-align:right;"> -4.48 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 826 </td>
+   <td style="text-align:left;"> CUE </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3359,6 +3417,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.15 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 28 </td>
+   <td style="text-align:left;"> HOU </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3367,6 +3426,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.22 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 119 </td>
+   <td style="text-align:left;"> LAM </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3375,6 +3435,7 @@ font-size: 10px
    <td style="text-align:right;"> -8.96 </td>
    <td style="text-align:left;"> Portugal </td>
    <td style="text-align:right;"> 79 </td>
+   <td style="text-align:left;"> LEI </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3383,6 +3444,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.23 </td>
    <td style="text-align:left;"> Morocco </td>
    <td style="text-align:right;"> 1302 </td>
+   <td style="text-align:left;"> MAD </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3391,6 +3453,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.30 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 18 </td>
+   <td style="text-align:left;"> MIM </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3399,6 +3462,7 @@ font-size: 10px
    <td style="text-align:right;"> -0.62 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 989 </td>
+   <td style="text-align:left;"> OLB </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3407,6 +3471,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.83 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 12 </td>
+   <td style="text-align:left;"> OLO </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3415,6 +3480,7 @@ font-size: 10px
    <td style="text-align:right;"> -2.35 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1221 </td>
+   <td style="text-align:left;"> ORI </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3423,6 +3489,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.30 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 21 </td>
+   <td style="text-align:left;"> PET </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3431,6 +3498,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.46 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 10 </td>
+   <td style="text-align:left;"> PIA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3439,6 +3507,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.04 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 750 </td>
+   <td style="text-align:left;"> PIE </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3447,6 +3516,7 @@ font-size: 10px
    <td style="text-align:right;"> -2.34 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 70 </td>
+   <td style="text-align:left;"> PLE </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3455,6 +3525,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.63 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 81 </td>
+   <td style="text-align:left;"> PUE </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3463,6 +3534,7 @@ font-size: 10px
    <td style="text-align:right;"> -0.36 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 420 </td>
+   <td style="text-align:left;"> QUA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3471,6 +3543,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.54 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 270 </td>
+   <td style="text-align:left;"> ROD </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3479,6 +3552,7 @@ font-size: 10px
    <td style="text-align:right;"> -8.36 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 386 </td>
+   <td style="text-align:left;"> SAC </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3487,6 +3561,7 @@ font-size: 10px
    <td style="text-align:right;"> -3.06 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1070 </td>
+   <td style="text-align:left;"> SAL </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3495,6 +3570,7 @@ font-size: 10px
    <td style="text-align:right;"> -8.45 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 309 </td>
+   <td style="text-align:left;"> SEG </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3503,6 +3579,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.99 </td>
    <td style="text-align:left;"> Morocco </td>
    <td style="text-align:right;"> 1975 </td>
+   <td style="text-align:left;"> SID </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3511,6 +3588,7 @@ font-size: 10px
    <td style="text-align:right;"> -6.49 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 264 </td>
+   <td style="text-align:left;"> SIE </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3519,6 +3597,7 @@ font-size: 10px
    <td style="text-align:right;"> -2.03 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 6 </td>
+   <td style="text-align:left;"> STJ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3527,6 +3606,7 @@ font-size: 10px
    <td style="text-align:right;"> -5.02 </td>
    <td style="text-align:left;"> Morocco </td>
    <td style="text-align:right;"> 1729 </td>
+   <td style="text-align:left;"> TAM </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3535,6 +3615,7 @@ font-size: 10px
    <td style="text-align:right;"> -4.31 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 947 </td>
+   <td style="text-align:left;"> VMQ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CLONAPIN </td>
@@ -3543,6 +3624,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.09 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 10 </td>
+   <td style="text-align:left;"> VER </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3551,6 +3633,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.28 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 630 </td>
+   <td style="text-align:left;"> ANI </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3559,6 +3642,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.25 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 700 </td>
+   <td style="text-align:left;"> ARZ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3567,6 +3651,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.05 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 1105 </td>
+   <td style="text-align:left;"> AUL </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3575,6 +3660,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.20 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 950 </td>
+   <td style="text-align:left;"> BAR </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3583,6 +3669,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.24 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 1020 </td>
+   <td style="text-align:left;"> BAV </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3591,6 +3678,7 @@ font-size: 10px
    <td style="text-align:right;"> 8.83 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 440 </td>
+   <td style="text-align:left;"> BOI </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3599,6 +3687,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.30 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 300 </td>
+   <td style="text-align:left;"> BRU </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3607,6 +3696,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.14 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 1040 </td>
+   <td style="text-align:left;"> CAG </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3615,6 +3705,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.32 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 130 </td>
+   <td style="text-align:left;"> CAL </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3623,6 +3714,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.13 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 795 </td>
+   <td style="text-align:left;"> CER </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3631,6 +3723,7 @@ font-size: 10px
    <td style="text-align:right;"> 8.88 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 500 </td>
+   <td style="text-align:left;"> GUA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3639,6 +3732,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.27 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 590 </td>
+   <td style="text-align:left;"> LAR </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3647,6 +3741,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.12 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 890 </td>
+   <td style="text-align:left;"> OMA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3655,6 +3750,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.14 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 1080 </td>
+   <td style="text-align:left;"> OME </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3663,6 +3759,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.20 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 800 </td>
+   <td style="text-align:left;"> OSP </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3671,6 +3768,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.00 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 700 </td>
+   <td style="text-align:left;"> PAS </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3679,6 +3777,7 @@ font-size: 10px
    <td style="text-align:right;"> 8.79 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 360 </td>
+   <td style="text-align:left;"> PER </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3687,6 +3786,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.23 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 365 </td>
+   <td style="text-align:left;"> PIN </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3695,6 +3795,7 @@ font-size: 10px
    <td style="text-align:right;"> 8.70 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 650 </td>
+   <td style="text-align:left;"> PUN </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3703,6 +3804,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.10 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 700 </td>
+   <td style="text-align:left;"> RES </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3711,6 +3813,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.19 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 1040 </td>
+   <td style="text-align:left;"> SOR </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3719,6 +3822,7 @@ font-size: 10px
    <td style="text-align:right;"> 8.97 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 960 </td>
+   <td style="text-align:left;"> TAR </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3727,6 +3831,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.30 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 975 </td>
+   <td style="text-align:left;"> TOV </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3735,6 +3840,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.32 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 405 </td>
+   <td style="text-align:left;"> UTR </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3743,6 +3849,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.02 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 690 </td>
+   <td style="text-align:left;"> VAL </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3751,6 +3858,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.12 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 50 </td>
+   <td style="text-align:left;"> VEN </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3759,6 +3867,7 @@ font-size: 10px
    <td style="text-align:right;"> 8.93 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 575 </td>
+   <td style="text-align:left;"> VEO </td>
   </tr>
   <tr>
    <td style="text-align:left;"> CORSICA </td>
@@ -3767,6 +3876,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.19 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 760 </td>
+   <td style="text-align:left;"> ZON </td>
   </tr>
   <tr>
    <td style="text-align:left;"> FORGENIUS </td>
@@ -3775,6 +3885,7 @@ font-size: 10px
    <td style="text-align:right;"> -0.36 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1353 </td>
+   <td style="text-align:left;"> ES_ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> FORGENIUS </td>
@@ -3783,6 +3894,7 @@ font-size: 10px
    <td style="text-align:right;"> -4.35 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1007 </td>
+   <td style="text-align:left;"> ES_ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> FORGENIUS </td>
@@ -3791,6 +3903,7 @@ font-size: 10px
    <td style="text-align:right;"> -4.13 </td>
    <td style="text-align:left;"> Spain </td>
    <td style="text-align:right;"> 1136 </td>
+   <td style="text-align:left;"> ES_ </td>
   </tr>
   <tr>
    <td style="text-align:left;"> FORGENIUS </td>
@@ -3799,6 +3912,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.19 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 36 </td>
+   <td style="text-align:left;"> LAC </td>
   </tr>
   <tr>
    <td style="text-align:left;"> FORGENIUS </td>
@@ -3807,6 +3921,7 @@ font-size: 10px
    <td style="text-align:right;"> -1.30 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 45 </td>
+   <td style="text-align:left;"> LIM </td>
   </tr>
   <tr>
    <td style="text-align:left;"> FORGENIUS </td>
@@ -3815,6 +3930,7 @@ font-size: 10px
    <td style="text-align:right;"> 7.71 </td>
    <td style="text-align:left;"> Italy </td>
    <td style="text-align:right;"> 544 </td>
+   <td style="text-align:left;"> SEB </td>
   </tr>
   <tr>
    <td style="text-align:left;"> GENTREE </td>
@@ -3823,6 +3939,7 @@ font-size: 10px
    <td style="text-align:right;"> 8.67 </td>
    <td style="text-align:left;"> Italy </td>
    <td style="text-align:right;"> 403 </td>
+   <td style="text-align:left;"> ANO </td>
   </tr>
   <tr>
    <td style="text-align:left;"> GENTREE </td>
@@ -3831,6 +3948,7 @@ font-size: 10px
    <td style="text-align:right;"> 2.88 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 216 </td>
+   <td style="text-align:left;"> LCO </td>
   </tr>
   <tr>
    <td style="text-align:left;"> GENTREE </td>
@@ -3839,6 +3957,7 @@ font-size: 10px
    <td style="text-align:right;"> 9.97 </td>
    <td style="text-align:left;"> Italy </td>
    <td style="text-align:right;"> 100 </td>
+   <td style="text-align:left;"> MAG </td>
   </tr>
   <tr>
    <td style="text-align:left;"> GENTREE </td>
@@ -3847,6 +3966,7 @@ font-size: 10px
    <td style="text-align:right;"> 6.37 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 361 </td>
+   <td style="text-align:left;"> MAU </td>
   </tr>
   <tr>
    <td style="text-align:left;"> GENTREE </td>
@@ -3855,6 +3975,7 @@ font-size: 10px
    <td style="text-align:right;"> 6.36 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 606 </td>
+   <td style="text-align:left;"> MAB </td>
   </tr>
   <tr>
    <td style="text-align:left;"> GENTREE </td>
@@ -3863,6 +3984,7 @@ font-size: 10px
    <td style="text-align:right;"> 10.18 </td>
    <td style="text-align:left;"> Italy </td>
    <td style="text-align:right;"> 434 </td>
+   <td style="text-align:left;"> MON </td>
   </tr>
   <tr>
    <td style="text-align:left;"> GENTREE </td>
@@ -3871,6 +3993,7 @@ font-size: 10px
    <td style="text-align:right;"> 11.35 </td>
    <td style="text-align:left;"> Italy </td>
    <td style="text-align:right;"> 408 </td>
+   <td style="text-align:left;"> MUR </td>
   </tr>
   <tr>
    <td style="text-align:left;"> GENTREE </td>
@@ -3879,6 +4002,7 @@ font-size: 10px
    <td style="text-align:right;"> 8.65 </td>
    <td style="text-align:left;"> Italy </td>
    <td style="text-align:right;"> 955 </td>
+   <td style="text-align:left;"> ROS </td>
   </tr>
   <tr>
    <td style="text-align:left;"> GENTREE </td>
@@ -3887,6 +4011,7 @@ font-size: 10px
    <td style="text-align:right;"> 11.24 </td>
    <td style="text-align:left;"> Italy </td>
    <td style="text-align:right;"> 441 </td>
+   <td style="text-align:left;"> TOC </td>
   </tr>
 </tbody>
 </table>
@@ -3894,30 +4019,22 @@ font-size: 10px
 </div>
 </div>
 <p>This dataset contains 116 populations.</p>
-<p>We are going to keep only the population for which we have genomic information. So, we load the population-level allele frequencies and extract the population names:</p>
+<p>We are going to keep only the populations that will be used in the following analyses (i.e. GEAs and genomic offset estimation). For that, we load the population-level allele frequencies that will be used in the GEA analyses and we extract the population names:</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>pop_tokeep <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data/genomic_data/imputed_allele_frequencies.rds&quot;</span>)) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(pop)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>The genomic data contain 82 populations.</p>
-<p>In the dataset with the population coordinates, we create a column <code>pop</code> which corresponds to the first three letters of the population codes (column <code>code</code>). Note that the populations <code>VAL-CORSICA</code> and <code>VAL-VMQ</code> will be attributed the same names but this is not a problem as the <code>VAL</code> populations are not among the populations used in Adé’s paper.</p>
+<p>The genomic data contain 83 populations.</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="ot">&lt;-</span> pop_coord <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">pop =</span> <span class="fu">str_sub</span>(code,<span class="dv">1</span>,<span class="dv">3</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<p>We then keep only the populations whose names correspond to the population names in the genomic data (which correspond to the first three letters of the individual names, which should correspond to the population of each individual, I hope!). Adé, please check that this step is ok!</p>
-<div class="cell">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="ot">&lt;-</span> pop_coord <span class="sc">%&gt;%</span> </span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pop <span class="sc">%in%</span> pop_tokeep) <span class="sc">%&gt;%</span> </span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(pop)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="sc">%&gt;%</span> <span class="fu">kable_mydf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="ot">&lt;-</span> pop_coord <span class="sc">%&gt;%</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pop <span class="sc">%in%</span> pop_tokeep) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(pop)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="sc">%&gt;%</span> <span class="fu">kable_mydf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 
@@ -4277,6 +4394,15 @@ font-size: 10px
    <td style="text-align:left;"> LIM </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> GENTREE </td>
+   <td style="text-align:left;"> MAUbis/FR-PP-12 </td>
+   <td style="text-align:right;"> 43.22 </td>
+   <td style="text-align:right;"> 6.36 </td>
+   <td style="text-align:left;"> France </td>
+   <td style="text-align:right;"> 606 </td>
+   <td style="text-align:left;"> MAB </td>
+  </tr>
+  <tr>
    <td style="text-align:left;"> CLONAPIN </td>
    <td style="text-align:left;"> MAD </td>
    <td style="text-align:right;"> 35.18 </td>
@@ -4301,15 +4427,6 @@ font-size: 10px
    <td style="text-align:right;"> 6.37 </td>
    <td style="text-align:left;"> France </td>
    <td style="text-align:right;"> 361 </td>
-   <td style="text-align:left;"> MAU </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> GENTREE </td>
-   <td style="text-align:left;"> MAUbis/FR-PP-12 </td>
-   <td style="text-align:right;"> 43.22 </td>
-   <td style="text-align:right;"> 6.36 </td>
-   <td style="text-align:left;"> France </td>
-   <td style="text-align:right;"> 606 </td>
    <td style="text-align:left;"> MAU </td>
   </tr>
   <tr>
@@ -4672,6 +4789,15 @@ font-size: 10px
    <td style="text-align:right;"> 639 </td>
    <td style="text-align:left;"> VMA </td>
   </tr>
+  <tr>
+   <td style="text-align:left;"> CLONAPIN </td>
+   <td style="text-align:left;"> VAL-VMQ </td>
+   <td style="text-align:right;"> 40.52 </td>
+   <td style="text-align:right;"> -4.31 </td>
+   <td style="text-align:left;"> Spain </td>
+   <td style="text-align:right;"> 947 </td>
+   <td style="text-align:left;"> VMQ </td>
+  </tr>
 </tbody>
 </table>
 
@@ -4681,9 +4807,9 @@ font-size: 10px
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pop_sp <span class="ot">&lt;-</span> pop_coord <span class="sc">%&gt;%</span> </span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(longitude,latitude) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">SpatialPoints</span>(<span class="at">proj4string=</span><span class="fu">CRS</span>(<span class="st">&quot;+proj=longlat +datum=WGS84 +no_defs&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>pop_sp <span class="ot">&lt;-</span> pop_coord <span class="sc">%&gt;%</span> </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(longitude,latitude) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">SpatialPoints</span>(<span class="at">proj4string=</span><span class="fu">CRS</span>(<span class="st">&quot;+proj=longlat +datum=WGS84 +no_defs&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -4693,22 +4819,22 @@ font-size: 10px
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>path_to_rasters <span class="ot">&lt;-</span> <span class="st">&quot;C:/Users/jularc/Documents/GOPredEvalPinpin/GOPredEvalPinpin/data/ClimaticData/ClimateDTRasters/&quot;</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>clim_ref <span class="ot">&lt;-</span> <span class="fu">lapply</span>(clim_var, <span class="cf">function</span>(x) {</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">%&gt;%</span> </span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">extract_clim_from_rasters</span>(<span class="at">x=</span>x,</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                              <span class="at">period=</span><span class="st">&quot;1901-1950&quot;</span>,</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                              <span class="at">pop_coord=</span>pop_sp,</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                              <span class="at">path=</span>path_to_rasters)}) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setNames</span>(clim_var) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop=</span>pop_coord<span class="sc">$</span>pop) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(pop,<span class="fu">everything</span>())</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>clim_ref <span class="sc">%&gt;%</span> <span class="fu">kable_mydf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>path_to_rasters <span class="ot">&lt;-</span> <span class="st">&quot;C:/Users/jularc/Documents/GOPredEvalPinpin/GOPredEvalPinpin/data/ClimaticData/ClimateDTRasters/&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>clim_ref <span class="ot">&lt;-</span> <span class="fu">lapply</span>(clim_var, <span class="cf">function</span>(x) {</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">%&gt;%</span> </span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">extract_clim_from_rasters</span>(<span class="at">x=</span>x,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                              <span class="at">period=</span><span class="st">&quot;1901-1950&quot;</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                              <span class="at">pop_coord=</span>pop_sp,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>                              <span class="at">path=</span>path_to_rasters)}) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setNames</span>(clim_var) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop=</span>pop_coord<span class="sc">$</span>pop) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(pop,<span class="fu">everything</span>())</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>clim_ref <span class="sc">%&gt;%</span> <span class="fu">kable_mydf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 
@@ -5068,6 +5194,15 @@ font-size: 10px
    <td style="text-align:right;"> 52.2 </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> MAB </td>
+   <td style="text-align:right;"> 11.8 </td>
+   <td style="text-align:right;"> 979.9 </td>
+   <td style="text-align:right;"> 48.8 </td>
+   <td style="text-align:right;"> 35.5 </td>
+   <td style="text-align:right;"> 603.5 </td>
+   <td style="text-align:right;"> 82.4 </td>
+  </tr>
+  <tr>
    <td style="text-align:left;"> MAD </td>
    <td style="text-align:right;"> 11.1 </td>
    <td style="text-align:right;"> 1307.2 </td>
@@ -5093,15 +5228,6 @@ font-size: 10px
    <td style="text-align:right;"> 35.5 </td>
    <td style="text-align:right;"> 612.9 </td>
    <td style="text-align:right;"> 86.6 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> MAU </td>
-   <td style="text-align:right;"> 11.8 </td>
-   <td style="text-align:right;"> 979.9 </td>
-   <td style="text-align:right;"> 48.8 </td>
-   <td style="text-align:right;"> 35.5 </td>
-   <td style="text-align:right;"> 603.5 </td>
-   <td style="text-align:right;"> 82.4 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> MAZ </td>
@@ -5463,13 +5589,22 @@ font-size: 10px
    <td style="text-align:right;"> 553.6 </td>
    <td style="text-align:right;"> 87.5 </td>
   </tr>
+  <tr>
+   <td style="text-align:left;"> VMQ </td>
+   <td style="text-align:right;"> 11.5 </td>
+   <td style="text-align:right;"> 645.6 </td>
+   <td style="text-align:right;"> 44.6 </td>
+   <td style="text-align:right;"> 32.8 </td>
+   <td style="text-align:right;"> 694.4 </td>
+   <td style="text-align:right;"> 132.8 </td>
+  </tr>
 </tbody>
 </table>
 
 </div>
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>clim_ref <span class="sc">%&gt;%</span> <span class="fu">saveRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data/climatic_data/reference_climate_population_locations.rds&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>clim_ref <span class="sc">%&gt;%</span> <span class="fu">saveRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data/climatic_data/reference_climate_population_locations.rds&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -5480,8 +5615,8 @@ font-size: 10px
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>gcm_names <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="fu">here</span>(path_to_rasters)) <span class="sc">%&gt;%</span>  <span class="fu">str_sub</span>(<span class="dv">5</span>,<span class="sc">-</span><span class="dv">35</span>) <span class="sc">%&gt;%</span> <span class="fu">setdiff</span>(<span class="st">&quot;&quot;</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>gcm_names </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>gcm_names <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="fu">here</span>(path_to_rasters)) <span class="sc">%&gt;%</span>  <span class="fu">str_sub</span>(<span class="dv">5</span>,<span class="sc">-</span><span class="dv">35</span>) <span class="sc">%&gt;%</span> <span class="fu">setdiff</span>(<span class="st">&quot;&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>gcm_names </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] &quot;GFDL-ESM4&quot;     &quot;IPSL-CM6A-LR&quot;  &quot;MPI-ESM1-2-HR&quot; &quot;MRI-ESM2-0&quot;    &quot;UKESM1-0-LL&quot;  </code></pre>
@@ -5490,25 +5625,25 @@ font-size: 10px
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># List of dataframes (one for each GCM) with the climatic variables in columns</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>clim_fut <span class="ot">&lt;-</span> <span class="fu">lapply</span>(gcm_names, <span class="cf">function</span>(gcm){</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">lapply</span>(clim_var, <span class="cf">function</span>(x) <span class="fu">extract_clim_from_rasters</span>(<span class="at">x=</span>x, </span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                                                       <span class="at">gcm=</span>gcm, </span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>                                                       <span class="at">period=</span><span class="st">&quot;2041-2070&quot;</span>, </span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>                                                       <span class="at">ssp=</span><span class="st">&quot;ssp370&quot;</span>,</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>                                                       <span class="at">pop_coord=</span>pop_sp,</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>                                                       <span class="at">path=</span>path_to_rasters)) <span class="sc">%&gt;%</span> </span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setNames</span>(clim_var) <span class="sc">%&gt;%</span> </span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop=</span>pop_coord<span class="sc">$</span>pop,</span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">gcm=</span>gcm) <span class="sc">%&gt;%</span> </span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(pop,gcm,<span class="fu">everything</span>())</span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span> </span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setNames</span>(gcm_names)</span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>clim_fut <span class="sc">%&gt;%</span> <span class="fu">saveRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data/climatic_data/future_climate_population_locations.rds&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># List of dataframes (one for each GCM) with the climatic variables in columns</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>clim_fut <span class="ot">&lt;-</span> <span class="fu">lapply</span>(gcm_names, <span class="cf">function</span>(gcm){</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">lapply</span>(clim_var, <span class="cf">function</span>(x) <span class="fu">extract_clim_from_rasters</span>(<span class="at">x=</span>x, </span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                                                       <span class="at">gcm=</span>gcm, </span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                                                       <span class="at">period=</span><span class="st">&quot;2041-2070&quot;</span>, </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>                                                       <span class="at">ssp=</span><span class="st">&quot;ssp370&quot;</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>                                                       <span class="at">pop_coord=</span>pop_sp,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>                                                       <span class="at">path=</span>path_to_rasters)) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setNames</span>(clim_var) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop=</span>pop_coord<span class="sc">$</span>pop,</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">gcm=</span>gcm) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(pop,gcm,<span class="fu">everything</span>())</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setNames</span>(gcm_names)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>clim_fut <span class="sc">%&gt;%</span> <span class="fu">saveRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data/climatic_data/future_climate_population_locations.rds&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
