@@ -11,3 +11,6 @@
 
 
 -   [ExtractingClimaticData.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/ExtractingClimaticData.html) Extracting reference and future climates at the location of the populations.
+
+
+-   [IdentificationCandidateSNPs_BayPass.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/IdentificationCandidateSNPs_BayPass.html) Identifying candidate SNPs with BayPass.
