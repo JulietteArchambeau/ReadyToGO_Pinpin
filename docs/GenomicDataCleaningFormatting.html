@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Juliette Archambeau &amp; Adélaïde Theraroz">
-<meta name="dcterms.date" content="2023-06-08">
+<meta name="dcterms.date" content="2023-06-09">
 
 <title>Formatting and cleaning the genomic data</title>
 <style>
@@ -2824,11 +2824,24 @@ border: 0;
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#monomorphic-snps" id="toc-monomorphic-snps" class="nav-link active" data-scroll-target="#monomorphic-snps"><span class="toc-section-number">1</span>  Monomorphic SNPs</a></li>
-  <li><a href="#minor-allele-counts" id="toc-minor-allele-counts" class="nav-link" data-scroll-target="#minor-allele-counts"><span class="toc-section-number">2</span>  Minor allele counts</a></li>
-  <li><a href="#missing-data-per-individual" id="toc-missing-data-per-individual" class="nav-link" data-scroll-target="#missing-data-per-individual"><span class="toc-section-number">3</span>  Missing data per individual</a></li>
-  <li><a href="#minor-allele-frequencies" id="toc-minor-allele-frequencies" class="nav-link" data-scroll-target="#minor-allele-frequencies"><span class="toc-section-number">4</span>  Minor allele frequencies</a></li>
-  <li><a href="#missing-data-per-snp" id="toc-missing-data-per-snp" class="nav-link" data-scroll-target="#missing-data-per-snp"><span class="toc-section-number">5</span>  Missing data per SNP</a></li>
+  <li><a href="#generating-table-of-minor-allele-counts" id="toc-generating-table-of-minor-allele-counts" class="nav-link active" data-scroll-target="#generating-table-of-minor-allele-counts"><span class="toc-section-number">1</span>  Generating table of minor allele counts</a>
+  <ul>
+  <li><a href="#importing-the-genepop-file" id="toc-importing-the-genepop-file" class="nav-link" data-scroll-target="#importing-the-genepop-file"><span class="toc-section-number">1.1</span>  Importing the genepop file</a></li>
+  <li><a href="#removing-the-monomorphic-snps" id="toc-removing-the-monomorphic-snps" class="nav-link" data-scroll-target="#removing-the-monomorphic-snps"><span class="toc-section-number">1.2</span>  Removing the monomorphic SNPs</a></li>
+  <li><a href="#transforming-the-table-to-minor-allele-counts" id="toc-transforming-the-table-to-minor-allele-counts" class="nav-link" data-scroll-target="#transforming-the-table-to-minor-allele-counts"><span class="toc-section-number">1.3</span>  Transforming the table to minor allele counts</a></li>
+  </ul></li>
+  <li><a href="#filtering" id="toc-filtering" class="nav-link" data-scroll-target="#filtering"><span class="toc-section-number">2</span>  Filtering</a>
+  <ul>
+  <li><a href="#minor-allele-counts" id="toc-minor-allele-counts" class="nav-link" data-scroll-target="#minor-allele-counts"><span class="toc-section-number">2.1</span>  Minor allele counts</a></li>
+  <li><a href="#missing-data-per-individual" id="toc-missing-data-per-individual" class="nav-link" data-scroll-target="#missing-data-per-individual"><span class="toc-section-number">2.2</span>  Missing data per individual</a></li>
+  </ul></li>
+  <li><a href="#minor-allele-frequencies" id="toc-minor-allele-frequencies" class="nav-link" data-scroll-target="#minor-allele-frequencies"><span class="toc-section-number">3</span>  Minor allele frequencies</a></li>
+  <li><a href="#missing-data-per-snp" id="toc-missing-data-per-snp" class="nav-link" data-scroll-target="#missing-data-per-snp"><span class="toc-section-number">4</span>  Missing data per SNP</a></li>
+  <li><a href="#exporting" id="toc-exporting" class="nav-link" data-scroll-target="#exporting"><span class="toc-section-number">5</span>  Exporting</a>
+  <ul>
+  <li><a href="#allele-counts-i.e.-012" id="toc-allele-counts-i.e.-012" class="nav-link" data-scroll-target="#allele-counts-i.e.-012"><span class="toc-section-number">5.1</span>  Allele counts (i.e. 0/1/2)</a></li>
+  <li><a href="#allele-frequencies" id="toc-allele-frequencies" class="nav-link" data-scroll-target="#allele-frequencies"><span class="toc-section-number">5.2</span>  Allele frequencies</a></li>
+  </ul></li>
   <li><a href="#imputation-of-missing-data" id="toc-imputation-of-missing-data" class="nav-link" data-scroll-target="#imputation-of-missing-data"><span class="toc-section-number">6</span>  Imputation of missing data</a></li>
   <li><a href="#exporting-the-genomic-data" id="toc-exporting-the-genomic-data" class="nav-link" data-scroll-target="#exporting-the-genomic-data"><span class="toc-section-number">7</span>  Exporting the genomic data</a>
   <ul>
@@ -2859,7 +2872,7 @@ border: 0;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 8, 2023</p>
+      <p class="date">June 9, 2023</p>
     </div>
   </div>
     
@@ -2883,6 +2896,10 @@ table {
 font-size: 10px
 }
 </style>
+<section id="generating-table-of-minor-allele-counts" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Generating table of minor allele counts</h1>
+<section id="importing-the-genepop-file" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="importing-the-genepop-file"><span class="header-section-number">1.1</span> Importing the genepop file</h2>
 <p>The genomic data are in <code>genepop</code> format. We load them and convert them to <code>genind</code> format using the <code>adegenet</code> R package.</p>
 <div class="cell">
 <details>
@@ -2918,8 +2935,9 @@ font-size: 10px
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>geno <span class="ot">&lt;-</span> geno <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">str_sub</span>(<span class="fu">rownames</span>(geno),<span class="dv">1</span>,<span class="dv">3</span>)<span class="sc">==</span><span class="st">&quot;COM&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<section id="monomorphic-snps" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Monomorphic SNPs</h1>
+</section>
+<section id="removing-the-monomorphic-snps" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="removing-the-monomorphic-snps"><span class="header-section-number">1.2</span> Removing the monomorphic SNPs</h2>
 <p>We first remove the <strong>monomorphic SNPs</strong>, i.e. SNPs that have only one allele.</p>
 <div class="cell">
 <details>
@@ -2950,8 +2968,8 @@ font-size: 10px
 </div>
 <p>19598 left after removing the monomorphic SNPs.</p>
 </section>
-<section id="minor-allele-counts" class="level1" data-number="2">
-<h1 data-number="2"><span class="header-section-number">2</span> Minor allele counts</h1>
+<section id="transforming-the-table-to-minor-allele-counts" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="transforming-the-table-to-minor-allele-counts"><span class="header-section-number">1.3</span> Transforming the table to minor allele counts</h2>
 <p>Then, we build a dataset with one row per locus, with only the counts of the minor allele (i.e. 0, 1, 2 or NA):</p>
 <div class="cell">
 <details>
@@ -3118,6 +3136,12 @@ font-size: 10px
 
 </div>
 </div>
+</section>
+</section>
+<section id="filtering" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Filtering</h1>
+<section id="minor-allele-counts" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="minor-allele-counts"><span class="header-section-number">2.1</span> Minor allele counts</h2>
 <p>We calculate for each SNPs the sum of the minor allele counts.</p>
 <div class="cell">
 <details>
@@ -3155,8 +3179,8 @@ font-size: 10px
 </div>
 <p><span style="color: orange;">There are 9724 non-monomorphic SNPs left.</span></p>
 </section>
-<section id="missing-data-per-individual" class="level1" data-number="3">
-<h1 data-number="3"><span class="header-section-number">3</span> Missing data per individual</h1>
+<section id="missing-data-per-individual" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="missing-data-per-individual"><span class="header-section-number">2.2</span> Missing data per individual</h2>
 <p>We then check the number of missing data per individual.</p>
 <div class="cell">
 <details>
@@ -3199,9 +3223,11 @@ font-size: 10px
 </div>
 <p><span style="color: orange;">We keep the 1478 individuals that have less than 18% missing data.</span></p>
 </section>
-<section id="minor-allele-frequencies" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> Minor allele frequencies</h1>
-<p>For the gene-environment association analyses, we want to remove <em>minor allele frequencies</em> (MAF).</p>
+</section>
+<section id="minor-allele-frequencies" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Minor allele frequencies</h1>
+<p>We want to remove <em>minor allele frequencies</em> (MAF) for gene-environment association analyses, but not for population genetic structure estimation.</p>
+<p>Therefore, we produce two datasets: one with MAF and the other without (i.e. we remove MAF &lt; 1%), that we store in a list.</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -3229,293 +3255,114 @@ font-size: 10px
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># we remove SNPs with MAF &lt; 1% </span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span>snp <span class="sc">%in%</span> tab[tab<span class="sc">$</span>MAF<span class="sc">&lt;</span><span class="dv">1</span>,]<span class="sc">$</span>snp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>list_geno <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">list_withmaf=</span><span class="fu">list</span>(<span class="at">df =</span> df),</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">list_withoutmaf=</span><span class="fu">list</span>(<span class="at">df =</span> df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span>snp <span class="sc">%in%</span> tab[tab<span class="sc">$</span>MAF<span class="sc">&lt;</span><span class="dv">1</span>,]<span class="sc">$</span>snp)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p><span style="color: orange;">We remove the 316 SNPs that have MAF &lt; 1%: 9408 SNPs left.</span></p>
+<p><span style="color: orange;">In the dataset without MAF, we remove the 316 SNPs that have MAF &lt; 1%: 9408 SNPs left.</span></p>
 </section>
-<section id="missing-data-per-snp" class="level1" data-number="5">
-<h1 data-number="5"><span class="header-section-number">5</span> Missing data per SNP</h1>
+<section id="missing-data-per-snp" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Missing data per SNP</h1>
 <p>We then look at the number of missing data per SNPs:</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>tab <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">&quot;snp&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sapply</span>(<span class="cf">function</span>(x) <span class="fu">sum</span>(<span class="fu">is.na</span>(x))<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="fu">nrow</span>(.)) <span class="sc">%&gt;%</span> </span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_colnames</span>(<span class="fu">c</span>(<span class="st">&quot;na_freq&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">&quot;snp&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(na_freq) <span class="sc">%&gt;%</span> </span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">id=</span><span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(.))</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(tab<span class="sc">$</span>id,tab<span class="sc">$</span>na_freq,</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch=</span><span class="dv">20</span>,</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">&quot;SNP number&quot;</span>,</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="st">&quot;Percentage of missing data per SNP&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>remove_NA_perSNP <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>tab <span class="ot">&lt;-</span> x<span class="sc">$</span>df <span class="sc">%&gt;%</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">&quot;snp&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sapply</span>(<span class="cf">function</span>(x) <span class="fu">sum</span>(<span class="fu">is.na</span>(x))<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="fu">nrow</span>(.)) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_colnames</span>(<span class="fu">c</span>(<span class="st">&quot;na_freq&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">&quot;snp&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(na_freq) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">id=</span><span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(.))</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> x<span class="sc">$</span>df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(snp <span class="sc">%in%</span> tab[tab<span class="sc">$</span>na_freq<span class="sc">&lt;</span><span class="dv">20</span>,]<span class="sc">$</span>snp)</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(<span class="at">df=</span>df,<span class="at">tab=</span>tab)</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>list_geno <span class="ot">&lt;-</span> <span class="fu">lapply</span>(list_geno,remove_NA_perSNP)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(list_geno<span class="sc">$</span>list_withoutmaf<span class="sc">$</span>tab<span class="sc">$</span>id,list_geno<span class="sc">$</span>list_withoutmaf<span class="sc">$</span>tab<span class="sc">$</span>na_freq,</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch=</span><span class="dv">20</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">&quot;SNP number&quot;</span>,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="st">&quot;Percentage of missing data per SNP&quot;</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">&quot;Genomic dataset without MAF&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="data:image/png;base64,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PWAAAGAT/vAP//Cb3/xmn0Sspn7zN3/z4Ycf3rNnT68bAgBNdBTAnEJ2fjn4RKVSe3A0m11ssWXFMFosBQAA/er48eN33HHHiRMnXn755QsXLvS6OW3s2LHj+PHj1157ba8bAgBtdBTA5OnJSj5vNVliWYbV7PkNtBmqcgAA0LdWV1ff97733X///aurq6LP7uBq4fLLL19ZWaGzC8AA6eweMDl3RNvCTlStRFVEAAD6xrlz59761rcmApLJ5D/8wz9cuHChf+7gCiNJ0vve9z6vnc8++yzpC8Bg6fQesHTRLs3YtX+tHM14HWKqXjoy0XJDRVFkJgIDAKB33v/+9y8sLPR5rOrEvffe+/GPf7zXrQCALem8CIecTtdz1KIQlhBCTE2k0/RtAQDQP26//fZvfOMbQxC3PGNjY7feeutXvvKV3bt397otANAF0aogKnOl0owQQihKV1sDAABac133z//8z7/61a+ePn1aCHHu3LmhyVpB4+PjP/nJT6gdD2D4RAtgspxmWCEAANvu05/+9D333HP+/Hnvn0OZtTxjY2Pf+ta3Dh061OuGAMD2Yh4wAAD6wr/+67+m0+lXXnlliFOWR5Ik78EVV1xx/PjxSy+9tLftAYA4bTWAOaa5tLi43H7Fyblijk4zAACEEP/5n//59re//dy5c71uSHwkSUomk3/8x39cKBT8AAYAI2gLAcwppJSmk4M1pc0UBQEMADCC7r777nvvvXfo+7XW2blz54EDB6655pp77733LW95S6+bAwD9ImoA21z6AgBgaD3++OO33HLLysrK2tqa98za2pr/eHSMjY39+7//u6qqvW4IAPS1iAHMWVrw05eqaoePzEy3KYhI0Q4AwDB48cUX3/GOd5w4ccLr0Rq1fq11duzY8cADD9x00029bggADIxoASyQv7RSuchMYACAIfT973//5ptvPn/+/IinLBEom/Ha1772kUceufrqq3vbHgAYXIlIW9nL1fyl6nOkLwDAwPvOd76TTCalRu9+97uHdZattiRJSiQS4+Pjd9xxx1rAyZMnSV8AsBVbrII4NcHIQgBA31teXq5UKolEwnXdz3zmM5VKZTRjVZidO3e+/e1vTyaT11577cc//vHXve51vW4RAAytaAFMmVSFoAQHAKCf/OIXv3jve9/7yCOPrK6u+vlqBIthtEapDADorWhD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bnYEvvLKK5VKJcKGZ86c6WIzfB/72Me242XRVyRJevWrX71nz57gXNX+/NSJRMJ/xv+vvyiZTL7zne+89957L7300l7+DQAAAH1sawHMMbOzRw3LEkIrucWGrGUZecvI51VNP1YchCKI/j1dm72Vy1+/w9Idnbv99tv//u//PvLmzz33XBcbI4T48Y9/3N0XRNd97GMf+6u/+qtetwIAAAChthDAzGwqY7TLHJaRVyrCLg9CBus373znO5944okIGz755JO/+MUvDh482N32UKhgO1x88cUnTpy47LLLet0QAAAAxCFqAHMKgfSlqtqM0rA4XbTtmflZbxUrP1uY7vcIpqqq14XlOM6masqbpum/QnebdNttt912220RNvyTP/mTz33uc5OTk91tz6FDhx599NHuvmYPRa704EkkEn/2Z3/2qU99qlvtAQAAwCiIWITDnK/N/qXqtlsub5zrS5bTxXJJ8/5h5efNyE2Mh19ufrMzoh49enTdKwyru+66q9dNqPPKNiQSiUQisa6WQ6Km6fO7d+/+zGc+47pu5EoPngsXLpC+AAAAsFnResCclWptCFU/1qpnKz2nq0beEkJUVhzR1wU55ubmDMMQQliWlUqlOplbed2szXNzc9veyp7asWPHhz/84S996UvdfdmdO3cePHhwx44dQgjXdROJhKh1T62urnqP/ef3799/9913/9Zv/VZ32wAAAADEI1oAs5eroWNqonVIkSemhLCEENayLUQ/BzBZlnVdz+fzoja3shBC07SZmZmNKy8uLgbnYhZC6Lq+qYGLA+qLX/ziCy+84FeMbEGSpM9//vN33HFHDK0CAAAABkVXytAPiVwuNzExEZyO2TAMr1ustU5mbR4a991339e//vXf+I3feOaZZ/xp0F7/+tefOHGCKh0AAABAa9HuAVMmq/UmjMXW93aZi9X4ok4qLVfsE97cyrqud7i+rusdzto8TPbs2fOzn/1sbW3NrXn66adJXwAAAEBb0XrA5OnDat6yhBBGJjUZVmTeKaQytfx1eHqAxuflcjlvSmXHcWzbXllZWV5e9hZNTk5OTEwoijIKAw4BAAAAdFfEIYhy7oiW99KVlVekBU0/PDM97Xdy2fbS4tF8vUx961Id/UuWZVmWR62DCwAAAMA2iXwPWLpo6xWlWozeMvKWkc83X3Ng4xcAAAAAdFXE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" class="img-fluid" width="576"></p>
+<p><img src="data:image/png;base64,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dCGRchfAhJrLa3oxb5l6QtYrH9PyuYp4ZdvGwYML82nd3LhHyRxIMf8wepdffvmHP/zhTlcBAAAA1Le4uHj48OFOVxE116sgqjknrynV9ypaxsptGd2y5hLpyvSl5QvELwAAAAAQrkfAhBBCqLmCM20bB+cWloQQYmxyekKVGocrRdFmDuRU0hcAAAAACCG8BTAhhJAkNZVrdkGXPKZl8pOjskryAgAAAIAtvAawlqRULhX0MQEAAACgH7i+BgwAAAAA0B4CGAAAAABEhAAGAAAAABEhgAEAAAAoufPOO9/61rdecMEFQ0NDF1xwwVvf+tY777yz00X1FQIYAAAAACGEuO666+Lx+I033njkyBHHcY4cOXLjjTfG4/HPfe5znS6tfxDAAAAAAIh/+Zd/+eQnP7m+vl51//r6+szMzI033tiRqvoPAQwAAACAmJmZafLopz71qcgq6W8EMAAAAGDQ2bb9f//3f00a3H///ffdd19k9fSxwDdi7je2bVuWVXmPLMuSJHWqHgAAACBwv/zlL1u2+cUvfnHRRRdFUEx/8xnAjGQ8sTiemZlOqX0YRWzbnpub03W9eTNN06anpwljAAAA6HWnn356IG3Qkr8piPbyoilMPZ2YytoBF9RZtm3H43FZllumLyGEruuyLMfjcdvur1cBAAAAA+alL33ptm3bmjQYGRkZHx+PrJ4+5m8EzFoyizfGR/to+McwjEQiUXmPoih1P2eLi4umWXoJTNOUZTmfz6uqGkWVAAAAQND27NkzOTl50003NWrwlre85eyzz46ypH7lL4DJY4oQZsCldFxl+nITqCoDWyKRcBwnxOIAAACAMM3Nzd1+++0PP/xw7UPnnnvuF77whehL6kv+piBKE/sVIYQQeiJpBFlO52Sz2fJtx3HcDGepqloZuiqPAAAAAPSWF73oRbfddtull15adf+ll1566623vvjFL+5EUX3I5zL0Uqpg5TVFCKEnYvFk1jB6/Tqo+fn54o18Pu+pY7l9+QgAAABALxodHb3rrrtuu+22z3zmMx/4wAc+85nP3HrrrXfeeSeLHwbI3xREO5ucWxJiXFNMvbgah55u0UXLO7luvkaqfE2X10u5yu3LRwAAAAB61+tf//rXv/71na6ib/ldhMPNKoEAAAAAgAp+N2JWFCXQOjpOUZTiEJZt25629jIMo3yEUCoDAAAA0C/8BTA1V+jm6YR+jI+PFwPY1NRUoVBw33F2drZ8hFAqAwAAANAvfC7C0X+mp6eLN0zTdLm3cnHX5vKlX+UjAAAAAEBdfqcg9h1JkjKZTDqdFht7KwshNE2bnJysbbywsFC5F7MQIpPJeJq4CAAAAGAAEcA2pVKp0dHRyu2YdV13s9qIm12bAQAAAKDdKYi2kYzHYxXKGzMbyVgsFk8aPbU9WHFv5Uwm47J9JpNxuWszAAAAALQ1AmYk4wm96eZXpp6QFzNWIdVTs/NSqVQqlRJC2LZtWdby8vLS0lLxobGxsdHRUVmWmXAIAAAAwCv/AczOVqQvRcvsH5tPpyvSmDymCGEKIcz0VHaixyJYiSRJkiR1aoBrdnb2i1/8oo+OJ0+eFELceeedQVcEAAAAoC1+A5idndpIW1reyqmSEMZSWlQEMClVsERcTptCmOk5I5Vjmp5HR48efeKJJ3x3f/DBBwMsBgAAAED7fAYwY24zfuXURoNbUmpGSyd0IYS+YOT65UKp4rxEIUTYExGz2exnPvMZx3G8dnzDG95w77337t27N4yqAAAAAPjmL4DZy4vFG0pmummsKs9DXFy2RcOg1oVs264NV9lstrhOfZmiKDMzM+HNUdyzZ4+PXsPDw4FXAgAAgMHx1FNPPfnkk2efffZpp53W6Vr6jb9VEK2l0vjX+GjzUCWNjhdvmEuWr2eKmG3byWQyFovJshyLxSp3ZE4mk1XpSwhhmmYikUgmk5FXCgAAAATMcZxvfvObl1xyye7du5///OefccYZl19++Q9+8INO19VX2Adsk23bxf2Xy4o7MluWZVlWeUMwRVHGx8eFEOV7dF0fGxsrLpwIAAAA9KLV1dW3v/3tN910U/melZWVQ4cOHTp0aGZm5tprr+1gbf3E3wiYPKYUbywuN9/ma3Ou4pjctGE3qExfiqIoSukkp6amZmdni7ctyyoUCrlcLpfLOY6jaVrx/nQ6XR4rAwAAAHrO5z73ucr0VWl2dva73/1uxPX0K38BbHNm4fzBZqnDPjjvcq5ix2Wz2fLtYsoqFArFxTZM0zRNUwiRz+erLgzL5XLlnHbw4MEI6wUAAAAC88wzz3zhC19o0uCzn/1sZMX0N38BTKiTpZEfMz1nNGpkJOXyWomT3b4E4vz8fPFGZcqSJCmTyRRvK4pSd7GNmZmZqiMAAAAAveWOO+44ceJEkwY/+clPHnnkkcjq6WM+A5hQpzOlgR89EYtnjapxMNvIxmOJ0iVSLddK7AbFMS4hRFXKmpiYKN4oXvdVq9y+fAQAAACgtxw5cqRlm1//+tcRVNL3fC/CIaUK+aVSxjLTCXljfUA9EdO3tlQyB1JdPv+wiVB3+gIAAAC6we7duwNpg5b8joAJIYSac6yNcbAGFC1vFXorftWupVFckGNxcdFlewAAAKC37Nu3b2ioWTTYu3fv7/zO70RWTx9rJ4AJIaRUwXGsfEYrL0VRpChaJm9ZTiHXK7svl9czrF1Lo7Chbsdy+/IRAAAAgN5ywQUXXHnllU0avO997xseHo6snj7WZgATQgghqalcoVBwKhQKuZTaU5P3Jicnizc8LShv23Z5d+axsbFQKgMAAADC93d/93cXXHBB3YcuueSST33qUxHX06+CCGB9QVXV8iieLMvxeLxll2w2W946TFEUNmIGAABA73rhC1942223VW6NK4SIxWJXXHHFj370o127dnWqsD5DANtUKBTKGczNkoblsS8hxIEDB8IqCwAAAAjfyZMnp6amihvhljmOc8stt9xwww2dqqr/tBvAbCObjMfqiseT1avTd71CoVDe+MslRVEsy2KxRAAAAPS0VCpVdxDCcZxrrrnmhz/8YfQl9aV2ApidjcfkRFpvMFZkmnpCjsWzPRbCUqlU8Tq2li0zmYxlWYVCgfQFAACAnnbkyJFvfvObTRr89V//dVS19Dnf+4AJIymnN6OXomjj+8cmR0eFWF5eWJrXN2KZmZbjoteWoneHi74AAADQHw4dOrS+vt6kwe23337q1Knt27dHVlK/8jsCZiQTG/stK1recgqFXC6VUlVVVVOpXK7gOFZe27ieKj3Va8NgAAAAwAB55JFHmjdYXV09evRoNMX0N58BzFjYiF9avsFeX5KaK+RLO2OZ6TnD3xMBAAAACNuZZ54ZSBu05C+AlfOXkplWm7RTpzOlUbDFZcbAAAAAgO706le/unmD8fFxVqIPRJurII6PNr+2SxodL94wl6ymDQEAAAB0yste9rLXve51TRpcffXVkRXT3/wFMHlMCbgOAAAAAB301a9+9Zxzzqn70MTEhKZpEdfTr/wFMGlifzGB6QvNr+0qz1XUJptNVQQAAADQUaOjo3fdddcVV1xReefOnTuvueaa733v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" class="img-fluid" width="576"></p>
 </div>
 </div>
-<p>9009 SNPs have less than 20% missing data and 8431 have less than 15% missing data.</p>
+<p>In the dataset without MAF, 9009 SNPs have less than 20% missing data and 8431 have less than 15% missing data.</p>
+<p><span style="color: orange;">We keep SNPs with less than 20% missing data. So, the two datasets contain 1478 individuals and there are 9009 SNPs left in the dataset without MAF and 9320 in the dataset with MAF.</span></p>
+</section>
+<section id="exporting" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Exporting</h1>
+<section id="allele-counts-i.e.-012" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="allele-counts-i.e.-012"><span class="header-section-number">5.1</span> Allele counts (i.e. 0/1/2)</h2>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># we keep the SNPs with less than 20% missing data</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(snp <span class="sc">%in%</span> tab[tab<span class="sc">$</span>na_freq<span class="sc">&lt;</span><span class="dv">20</span>,]<span class="sc">$</span>snp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(list_geno)){</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  specMAF <span class="ot">&lt;-</span> <span class="fu">names</span>(list_geno[i])[<span class="dv">1</span>] <span class="sc">%&gt;%</span> <span class="fu">str_sub</span>(<span class="dv">6</span>, <span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  list_geno[[i]]<span class="sc">$</span>df <span class="sc">%&gt;%</span> </span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(snp,<span class="fu">sort</span>(<span class="fu">colnames</span>(.[,<span class="sc">-</span><span class="dv">1</span>]))) <span class="sc">%&gt;%</span> <span class="co"># sort columns (i.e. individuals) by alphabetical order</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">write_csv</span>(<span class="fu">here</span>(<span class="fu">paste0</span>(<span class="st">&quot;data/genomic_data/filtered_allele_counts_&quot;</span>,specMAF,<span class="st">&quot;.csv&quot;</span>)),</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">append=</span><span class="cn">FALSE</span>)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Reminder</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="co"># to download the dataset with snp_ID as first column: use `read.csv` with missing row.names</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="co"># to download the dataset with snp_ID as row names: use `read.csv` with row.names = 1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p><span style="color: orange;">We keep the 9009 SNPs with less than 20% missing data.</span></p>
-<p><span style="color: red;">So, after the filtering steps, we have genomic data for 9009 SNPs and 1478 individuals.</span></p>
+<p>562881 missing data in the dataset with MAF, and 544887 missing data in the dataset without MAF.</p>
 </section>
-<section id="imputation-of-missing-data" class="level1" data-number="6">
-<h1 data-number="6"><span class="header-section-number">6</span> Imputation of missing data</h1>
-<p>We have to impute missing values to run the gene-environment association analyses.</p>
-<p>For that, you can impute the missing values based on the most common alleles in the main gene pool of the individual. However, in the dataset you sent to me with the STRUCTURE outputs, I only found the proportion of assignment for each population, do you have the proportion of assignment at the individual level? Or do you want to perform the imputation at the population level?</p>
+<section id="allele-frequencies" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="allele-frequencies"><span class="header-section-number">5.2</span> Allele frequencies</h2>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>prop <span class="ot">&lt;-</span> <span class="fu">read_delim</span>(<span class="fu">here</span>(<span class="st">&quot;data/genomic_data/DATA_GENEPOOLS.csv&quot;</span>), <span class="at">delim =</span> <span class="st">&quot;;&quot;</span>, <span class="at">escape_double =</span> <span class="cn">FALSE</span>, <span class="at">trim_ws =</span> <span class="cn">TRUE</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) </span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>prop[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,] <span class="sc">%&gt;%</span>  <span class="fu">kable_mydf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-
-<table class="table table-hover table-condensed table-responsive" style="font-size: 10px; width: auto !important; margin-left: auto; margin-right: auto;">
- <thead>
-  <tr>
-   <th style="text-align:right;"> COUNT </th>
-   <th style="text-align:left;"> POP </th>
-   <th style="text-align:right;"> N </th>
-   <th style="text-align:right;"> Latitude </th>
-   <th style="text-align:right;"> Longitude </th>
-   <th style="text-align:right;"> K1 </th>
-   <th style="text-align:right;"> K2 </th>
-   <th style="text-align:right;"> K3 </th>
-   <th style="text-align:right;"> K4 </th>
-   <th style="text-align:right;"> K5 </th>
-   <th style="text-align:right;"> K6 </th>
-   <th style="text-align:right;"> K7 </th>
-   <th style="text-align:right;"> K8 </th>
-   <th style="text-align:right;"> K9 </th>
-   <th style="text-align:right;"> K10 </th>
-  </tr>
- </thead>
-<tbody>
-  <tr>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:left;"> ABA </td>
-   <td style="text-align:right;"> 22 </td>
-   <td style="text-align:right;"> 36.81 </td>
-   <td style="text-align:right;"> 8.71 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.02 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.98 </td>
-   <td style="text-align:right;"> 0.00 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 2 </td>
-   <td style="text-align:left;"> ADE </td>
-   <td style="text-align:right;"> 21 </td>
-   <td style="text-align:right;"> 35.16 </td>
-   <td style="text-align:right;"> -5.08 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.39 </td>
-   <td style="text-align:right;"> 0.61 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 3 </td>
-   <td style="text-align:left;"> AHI </td>
-   <td style="text-align:right;"> 22 </td>
-   <td style="text-align:right;"> 39.89 </td>
-   <td style="text-align:right;"> -0.33 </td>
-   <td style="text-align:right;"> 0.02 </td>
-   <td style="text-align:right;"> 0.02 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.11 </td>
-   <td style="text-align:right;"> 0.03 </td>
-   <td style="text-align:right;"> 0.77 </td>
-   <td style="text-align:right;"> 0.03 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.01 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 4 </td>
-   <td style="text-align:left;"> ALT </td>
-   <td style="text-align:right;"> 8 </td>
-   <td style="text-align:right;"> 43.30 </td>
-   <td style="text-align:right;"> -6.46 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.10 </td>
-   <td style="text-align:right;"> 0.82 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.07 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 5 </td>
-   <td style="text-align:left;"> ANI </td>
-   <td style="text-align:right;"> 12 </td>
-   <td style="text-align:right;"> 41.97 </td>
-   <td style="text-align:right;"> 9.28 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.91 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.04 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.01 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 6 </td>
-   <td style="text-align:left;"> ANO </td>
-   <td style="text-align:right;"> 11 </td>
-   <td style="text-align:right;"> 44.42 </td>
-   <td style="text-align:right;"> 8.67 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.21 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.77 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 7 </td>
-   <td style="text-align:left;"> ARM </td>
-   <td style="text-align:right;"> 8 </td>
-   <td style="text-align:right;"> 43.30 </td>
-   <td style="text-align:right;"> -6.46 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.02 </td>
-   <td style="text-align:right;"> 0.95 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.02 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 8 </td>
-   <td style="text-align:left;"> ARN </td>
-   <td style="text-align:right;"> 17 </td>
-   <td style="text-align:right;"> 40.19 </td>
-   <td style="text-align:right;"> -5.12 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.77 </td>
-   <td style="text-align:right;"> 0.16 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.04 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 9 </td>
-   <td style="text-align:left;"> BAV </td>
-   <td style="text-align:right;"> 16 </td>
-   <td style="text-align:right;"> 41.80 </td>
-   <td style="text-align:right;"> 9.24 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.87 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.02 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.05 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.02 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 10 </td>
-   <td style="text-align:left;"> BAY </td>
-   <td style="text-align:right;"> 15 </td>
-   <td style="text-align:right;"> 41.52 </td>
-   <td style="text-align:right;"> -2.88 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.01 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.75 </td>
-   <td style="text-align:right;"> 0.16 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.08 </td>
-  </tr>
-</tbody>
-</table>
-
-</div>
-</div>
-<p>Another option is to use the function <code>impute</code> of the <code>LEA</code> R package to do the imputation: it uses ancestry and genotype frequency information (estimated with the <code>snmf</code> function, which estimates admixture coefficients) to do the imputation.</p>
-</section>
-<section id="exporting-the-genomic-data" class="level1" data-number="7">
-<h1 data-number="7"><span class="header-section-number">7</span> Exporting the genomic data</h1>
-<section id="individual-level-allele-counts" class="level2" data-number="7.1">
-<h2 data-number="7.1" class="anchored" data-anchor-id="individual-level-allele-counts"><span class="header-section-number">7.1</span> Individual-level allele counts</h2>
-<p>To run BayPass and LFMM, genomic data have to be allele counts at the individual level, so below we export the allele counts:</p>
-<div class="cell">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">%&gt;%</span> <span class="fu">saveRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data/genomic_data/imputed_allele_counts.rds&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-</section>
-<section id="population-allele-frequencies" class="level2" data-number="7.2">
-<h2 data-number="7.2" class="anchored" data-anchor-id="population-allele-frequencies"><span class="header-section-number">7.2</span> Population allele frequencies</h2>
-<p>To run the RDA and GF, the genomic data have to be population allele frequencies.</p>
-<div class="cell">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>df_freq <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">&quot;snp&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="at">var=</span><span class="st">&quot;pop&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop=</span><span class="fu">str_sub</span>(pop,<span class="dv">1</span>,<span class="dv">3</span>)) <span class="sc">%&gt;%</span> <span class="co"># check that the population name corresponds to the first three letters of each individual name  </span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(pop) <span class="sc">%&gt;%</span> </span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_all</span>(<span class="sc">~</span><span class="fu">sum</span>(., <span class="at">na.rm =</span> <span class="cn">TRUE</span>)<span class="sc">/</span>((<span class="fu">n</span>()<span class="sc">-</span><span class="fu">sum</span>(<span class="fu">is.na</span>(.)))<span class="sc">*</span><span class="dv">2</span>))</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>df_freq[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>] <span class="sc">%&gt;%</span>  <span class="fu">kable_mydf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Only useful for the dataset without MAF</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>compute_allele_freq <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>x <span class="sc">%&gt;%</span> </span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="at">var=</span><span class="st">&quot;pop&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop=</span><span class="fu">str_sub</span>(pop,<span class="dv">1</span>,<span class="dv">3</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(pop) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_all</span>(<span class="sc">~</span><span class="fu">sum</span>(., <span class="at">na.rm =</span> <span class="cn">TRUE</span>)<span class="sc">/</span>((<span class="fu">n</span>()<span class="sc">-</span><span class="fu">sum</span>(<span class="fu">is.na</span>(.)))<span class="sc">*</span><span class="dv">2</span>))</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>df_freq <span class="ot">&lt;-</span> list_geno<span class="sc">$</span>list_withoutmaf<span class="sc">$</span>df <span class="sc">%&gt;%</span> </span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">&quot;snp&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_allele_freq</span>() </span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>df_freq <span class="sc">%&gt;%</span> </span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_csv</span>(<span class="fu">here</span>(<span class="fu">paste0</span>(<span class="st">&quot;data/genomic_data/filtered_allele_frequencies_withoutmaf.csv&quot;</span>)),</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>            <span class="at">append=</span><span class="cn">FALSE</span>)</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>df_freq[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>] <span class="sc">%&gt;%</span> </span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), round, <span class="dv">2</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_mydf</span>(<span class="at">boldfirstcolumn =</span> T, <span class="at">font_size =</span> <span class="dv">12</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 
-<table class="table table-hover table-condensed table-responsive" style="font-size: 10px; width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table table-hover table-condensed table-responsive" style="font-size: 12px; width: auto !important; margin-left: auto; margin-right: auto;">
  <thead>
   <tr>
    <th style="text-align:left;"> pop </th>
@@ -3526,8 +3373,594 @@ font-size: 10px
    <th style="text-align:right;"> Affx-979041055 </th>
    <th style="text-align:right;"> Affx-979041057 </th>
    <th style="text-align:right;"> Affx-979041058 </th>
-   <th style="text-align:right;"> Affx-979041059 </th>
-   <th style="text-align:right;"> Affx-979041060 </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> ABA </td>
+   <td style="text-align:right;"> 0.02 </td>
+   <td style="text-align:right;"> 0.02 </td>
+   <td style="text-align:right;"> 0.43 </td>
+   <td style="text-align:right;"> 0.90 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.02 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> ADE </td>
+   <td style="text-align:right;"> 0.05 </td>
+   <td style="text-align:right;"> 0.58 </td>
+   <td style="text-align:right;"> 1.00 </td>
+   <td style="text-align:right;"> 0.10 </td>
+   <td style="text-align:right;"> 0.20 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.71 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> AHI </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.11 </td>
+   <td style="text-align:right;"> 0.33 </td>
+   <td style="text-align:right;"> 0.14 </td>
+   <td style="text-align:right;"> 0.05 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.52 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> ALT </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.06 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.12 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.19 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> ANI </td>
+   <td style="text-align:right;"> 0.07 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.21 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.25 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> ANO </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.55 </td>
+   <td style="text-align:right;"> 0.18 </td>
+   <td style="text-align:right;"> 0.05 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.50 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> ARM </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.19 </td>
+   <td style="text-align:right;"> 0.19 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.38 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> ARN </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.06 </td>
+   <td style="text-align:right;"> 0.12 </td>
+   <td style="text-align:right;"> 0.12 </td>
+   <td style="text-align:right;"> 0.03 </td>
+   <td style="text-align:right;"> 0.03 </td>
+   <td style="text-align:right;"> 0.44 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> BAV </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.27 </td>
+   <td style="text-align:right;"> 0.57 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.10 </td>
+   <td style="text-align:right;"> 0.36 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> BAY </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.30 </td>
+   <td style="text-align:right;"> 0.10 </td>
+   <td style="text-align:right;"> 0.20 </td>
+   <td style="text-align:right;"> 0.03 </td>
+   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.17 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<p>8166 missing data in this dataset.</p>
+</section>
+</section>
+<section id="imputation-of-missing-data" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Imputation of missing data</h1>
+<p>We have to impute missing values to run the gene-environment association analyses.</p>
+<p>For that, we impute the missing values based on the most common alleles in the main gene pool of the individual.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>gp <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">&quot;data/genomic_data/K10_indiv_Juliette.csv&quot;</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(Individual) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Individual =</span> Individual <span class="sc">%&gt;%</span> <span class="fu">str_replace</span>(<span class="st">&quot;MAUbis&quot;</span>,<span class="st">&quot;MAB&quot;</span>))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>gp <span class="ot">&lt;-</span> gp <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">contains</span>(<span class="st">&quot;K&quot;</span>)) <span class="sc">%&gt;%</span>  <span class="fu">apply</span>(<span class="at">MARGIN=</span><span class="dv">1</span>, <span class="cf">function</span>(x){</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a> K_names <span class="ot">&lt;-</span> gp <span class="sc">%&gt;%</span>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">contains</span>(<span class="st">&quot;K&quot;</span>)) <span class="sc">%&gt;%</span> <span class="fu">names</span>()</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a> <span class="fu">tibble</span>(<span class="at">K_max =</span> <span class="fu">max</span>(x),</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">K_main =</span> K_names[<span class="fu">which.max</span>(x)])</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(gp,.)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>list_geno <span class="ot">&lt;-</span> <span class="fu">mclapply</span>(list_geno, <span class="cf">function</span>(x){</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span>  x<span class="sc">$</span>df <span class="sc">%&gt;%</span> </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">&quot;snp&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="st">&quot;Individual&quot;</span>) <span class="sc">%&gt;%</span>  </span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(gp[,<span class="fu">c</span>(<span class="st">&quot;Individual&quot;</span>,<span class="st">&quot;K_main&quot;</span>)],<span class="at">by=</span><span class="st">&quot;Individual&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Individual,K_main,<span class="fu">everything</span>())</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(<span class="at">df=</span>df)</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We can check that the imputation worked fine</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>subset <span class="ot">&lt;-</span> list_geno<span class="sc">$</span>list_withoutmaf<span class="sc">$</span>df[list_geno<span class="sc">$</span>list_withoutmaf<span class="sc">$</span>df<span class="sc">$</span>K_main<span class="sc">==</span><span class="st">&quot;K4&quot;</span>,]</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>vec_snps_with_nas <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">colnames</span>(subset)[<span class="fu">colSums</span>(<span class="fu">is.na</span>(subset)) <span class="sc">&gt;</span> <span class="dv">0</span>],<span class="dv">10</span>,<span class="at">replace=</span>F) <span class="co">#extract some SNPs with NAs</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>subset_df <span class="ot">&lt;-</span> <span class="fu">lapply</span>(vec_snps_with_nas, <span class="cf">function</span>(x){</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  subset <span class="sc">%&gt;%</span> </span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tabyl</span>(<span class="fu">any_of</span>(x)) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_colnames</span>(<span class="fu">c</span>(<span class="st">&quot;genotype&quot;</span>,<span class="st">&quot;count&quot;</span>)) <span class="sc">%&gt;%</span>  </span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> <span class="st">&quot;genotype&quot;</span>, <span class="at">values_from =</span> <span class="st">&quot;count&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">expected_value_after_imp=</span><span class="fu">colnames</span>(.)[<span class="fu">which.max</span>(<span class="fu">across</span>(<span class="fu">everything</span>(.)))],<span class="at">snp =</span> x)</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">nb_0_bf_imp =</span> <span class="st">`</span><span class="at">0</span><span class="st">`</span>,</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>                <span class="at">nb_1_bf_imp =</span> <span class="st">`</span><span class="at">1</span><span class="st">`</span>,</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>                <span class="at">nb_2_bf_imp =</span> <span class="st">`</span><span class="at">2</span><span class="st">`</span>,</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>                <span class="at">nb_NA_bf_imp =</span> <span class="st">`</span><span class="at">NA</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>We impute the missing values:</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace NAs by (1) subseting by GP, (2) imputing NAs, (3) reassembling the GP.</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>list_geno <span class="ot">&lt;-</span> <span class="fu">mclapply</span>(list_geno, <span class="cf">function</span>(x){</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">unique</span>(x<span class="sc">$</span>df<span class="sc">$</span>K_main)){</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  subset <span class="ot">&lt;-</span> x<span class="sc">$</span>df[x<span class="sc">$</span>df<span class="sc">$</span>K_main<span class="sc">==</span>i,]</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  subset <span class="ot">&lt;-</span> <span class="fu">apply</span>(subset[,<span class="dv">3</span><span class="sc">:</span><span class="fu">ncol</span>(subset)], <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="fu">replace</span>(x, <span class="fu">is.na</span>(x), <span class="fu">as.numeric</span>(<span class="fu">names</span>(<span class="fu">which.max</span>(<span class="fu">table</span>(x))))))</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  x<span class="sc">$</span>df[x<span class="sc">$</span>df<span class="sc">$</span>K_main<span class="sc">==</span>i,<span class="dv">3</span><span class="sc">:</span><span class="fu">ncol</span>(x<span class="sc">$</span>df)] <span class="ot">&lt;-</span> subset</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(<span class="at">df=</span>x<span class="sc">$</span>df)</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>For the imputation of missing values, another option would be to use the function <code>impute</code> of the <code>LEA</code> R package to do the imputation: it uses ancestry and genotype frequency information (estimated with the <code>snmf</code> function, which estimates admixture coefficients) to do the imputation.</p>
+<p>We can check that the imputation worked well:</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># If we want to check that the imputation worked fine</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Look at the SNPs that had NAs before imputation</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>subset <span class="ot">&lt;-</span> list_geno<span class="sc">$</span>list_withoutmaf<span class="sc">$</span>df[list_geno<span class="sc">$</span>list_withoutmaf<span class="sc">$</span>df<span class="sc">$</span>K_main<span class="sc">==</span><span class="st">&quot;K4&quot;</span>,]</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>subset_df_2 <span class="ot">&lt;-</span> <span class="fu">lapply</span>(vec_snps_with_nas, <span class="cf">function</span>(x){</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  subset <span class="sc">%&gt;%</span> </span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tabyl</span>(<span class="fu">any_of</span>(x)) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_colnames</span>(<span class="fu">c</span>(<span class="st">&quot;genotype&quot;</span>,<span class="st">&quot;count&quot;</span>)) <span class="sc">%&gt;%</span>  </span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> <span class="st">&quot;genotype&quot;</span>, <span class="at">values_from =</span> <span class="st">&quot;count&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">snp =</span> x)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">nb_0_after_imp =</span> <span class="st">`</span><span class="at">0</span><span class="st">`</span>,</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>                <span class="at">nb_1_after_imp =</span> <span class="st">`</span><span class="at">1</span><span class="st">`</span>,</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>                <span class="at">nb_2_after_imp =</span> <span class="st">`</span><span class="at">2</span><span class="st">`</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(subset_df, <span class="at">by=</span><span class="st">&quot;snp&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(snp, <span class="fu">contains</span>(<span class="st">&quot;bf_imp&quot;</span>),expected_value_after_imp, <span class="fu">everything</span>())</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>subset_df_2  <span class="sc">%&gt;%</span> <span class="fu">kable_mydf</span>(<span class="at">boldfirstcolumn =</span> F, <span class="at">font_size =</span> <span class="dv">11</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+
+<table class="table table-hover table-condensed table-responsive" style="font-size: 11px; width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> snp </th>
+   <th style="text-align:right;"> nb_0_bf_imp </th>
+   <th style="text-align:right;"> nb_NA_bf_imp </th>
+   <th style="text-align:right;"> nb_1_bf_imp </th>
+   <th style="text-align:right;"> nb_2_bf_imp </th>
+   <th style="text-align:left;"> expected_value_after_imp </th>
+   <th style="text-align:right;"> nb_0_after_imp </th>
+   <th style="text-align:right;"> nb_1_after_imp </th>
+   <th style="text-align:right;"> nb_2_after_imp </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Affx-979087208 </td>
+   <td style="text-align:right;"> 169 </td>
+   <td style="text-align:right;"> 78 </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 247 </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:right;"> NA </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Affx-979085666 </td>
+   <td style="text-align:right;"> 233 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 240 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> NA </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Affx-979085571 </td>
+   <td style="text-align:right;"> 188 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 51 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 190 </td>
+   <td style="text-align:right;"> 51 </td>
+   <td style="text-align:right;"> 6 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Affx-979045045 </td>
+   <td style="text-align:right;"> 106 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 111 </td>
+   <td style="text-align:right;"> 29 </td>
+   <td style="text-align:left;"> 1 </td>
+   <td style="text-align:right;"> 106 </td>
+   <td style="text-align:right;"> 112 </td>
+   <td style="text-align:right;"> 29 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Affx-979063486 </td>
+   <td style="text-align:right;"> 187 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 51 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 193 </td>
+   <td style="text-align:right;"> 51 </td>
+   <td style="text-align:right;"> 3 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Affx-979054708 </td>
+   <td style="text-align:right;"> 59 </td>
+   <td style="text-align:right;"> 59 </td>
+   <td style="text-align:right;"> 104 </td>
+   <td style="text-align:right;"> 25 </td>
+   <td style="text-align:left;"> 1 </td>
+   <td style="text-align:right;"> 59 </td>
+   <td style="text-align:right;"> 163 </td>
+   <td style="text-align:right;"> 25 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Affx-979072170 </td>
+   <td style="text-align:right;"> 210 </td>
+   <td style="text-align:right;"> 25 </td>
+   <td style="text-align:right;"> 12 </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 235 </td>
+   <td style="text-align:right;"> 12 </td>
+   <td style="text-align:right;"> NA </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Affx-979044492 </td>
+   <td style="text-align:right;"> 147 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 91 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 149 </td>
+   <td style="text-align:right;"> 91 </td>
+   <td style="text-align:right;"> 7 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Affx-979045764 </td>
+   <td style="text-align:right;"> 163 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 75 </td>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 164 </td>
+   <td style="text-align:right;"> 75 </td>
+   <td style="text-align:right;"> 8 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Affx-979042896 </td>
+   <td style="text-align:right;"> 68 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 110 </td>
+   <td style="text-align:right;"> 68 </td>
+   <td style="text-align:left;"> 1 </td>
+   <td style="text-align:right;"> 68 </td>
+   <td style="text-align:right;"> 111 </td>
+   <td style="text-align:right;"> 68 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<p>The imputation worked well :)</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>list_geno <span class="ot">&lt;-</span> <span class="fu">mclapply</span>(list_geno, <span class="cf">function</span>(x){</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>x<span class="sc">$</span>df <span class="ot">&lt;-</span> x<span class="sc">$</span>df <span class="sc">%&gt;%</span> </span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(Individual) <span class="sc">%&gt;%</span> </span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="at">var=</span><span class="st">&quot;Individual&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>K_main) <span class="sc">%&gt;%</span> </span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(<span class="at">df=</span>x<span class="sc">$</span>df)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualization:</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>list_geno<span class="sc">$</span>list_withoutmaf<span class="sc">$</span>df[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>]  <span class="sc">%&gt;%</span> <span class="fu">kable_mydf</span>(<span class="at">boldfirstcolumn =</span> T, <span class="at">font_size =</span> <span class="dv">11</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+
+<table class="table table-hover table-condensed table-responsive" style="font-size: 11px; width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> ABA01 </th>
+   <th style="text-align:right;"> ABA02 </th>
+   <th style="text-align:right;"> ABA03 </th>
+   <th style="text-align:right;"> ABA04 </th>
+   <th style="text-align:right;"> ABA05 </th>
+   <th style="text-align:right;"> ABA06 </th>
+   <th style="text-align:right;"> ABA07 </th>
+   <th style="text-align:right;"> ABA08 </th>
+   <th style="text-align:right;"> ABA09 </th>
+   <th style="text-align:right;"> ABA10 </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Affx-979041050 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Affx-979041051 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Affx-979041053 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 2 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Affx-979041054 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 2 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Affx-979041055 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Affx-979041057 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Affx-979041058 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Affx-979041059 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Affx-979041060 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Affx-979041061 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</section>
+<section id="exporting-the-genomic-data" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Exporting the genomic data</h1>
+<section id="individual-level-allele-counts" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="individual-level-allele-counts"><span class="header-section-number">7.1</span> Individual-level allele counts</h2>
+<p>To run BayPass and LFMM, genomic data have to be allele counts at the individual level, so below we export the allele counts:</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(list_geno)){</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  specMAF <span class="ot">&lt;-</span> <span class="fu">names</span>(list_geno[i])[<span class="dv">1</span>] <span class="sc">%&gt;%</span> <span class="fu">str_sub</span>(<span class="dv">6</span>, <span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  list_geno[[i]]<span class="sc">$</span>df <span class="sc">%&gt;%</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames_to_column</span>(<span class="at">var=</span><span class="st">&quot;snp_ID&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">write_csv</span>(<span class="fu">here</span>(<span class="fu">paste0</span>(<span class="st">&quot;data/genomic_data/imputed_allele_counts_&quot;</span>,specMAF,<span class="st">&quot;.csv&quot;</span>)),</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">append=</span><span class="cn">FALSE</span>)</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="population-allele-frequencies" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="population-allele-frequencies"><span class="header-section-number">7.2</span> Population allele frequencies</h2>
+<p>To run the RDA and GF, the genomic data have to be population allele frequencies.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate allele frequencies</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>list_geno <span class="ot">&lt;-</span> <span class="fu">mclapply</span>(list_geno, <span class="cf">function</span>(x){</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(<span class="at">df=</span><span class="fu">compute_allele_freq</span>(x<span class="sc">$</span>df))</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="co"># export in csv</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(list_geno)){</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>  specMAF <span class="ot">&lt;-</span> <span class="fu">names</span>(list_geno[i])[<span class="dv">1</span>] <span class="sc">%&gt;%</span> <span class="fu">str_sub</span>(<span class="dv">6</span>, <span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>  list_geno[[i]]<span class="sc">$</span>df <span class="sc">%&gt;%</span> </span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_csv</span>(<span class="fu">here</span>(<span class="fu">paste0</span>(<span class="st">&quot;data/genomic_data/imputed_allele_frequencies_&quot;</span>,specMAF,<span class="st">&quot;.csv&quot;</span>)),</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">append=</span><span class="cn">FALSE</span>)</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>list_geno<span class="sc">$</span>list_withoutmaf<span class="sc">$</span>df[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>]  <span class="sc">%&gt;%</span> </span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), round, <span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_mydf</span>(<span class="at">boldfirstcolumn =</span> F, <span class="at">font_size =</span> <span class="dv">11</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+
+<table class="table table-hover table-condensed table-responsive" style="font-size: 11px; width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> pop </th>
+   <th style="text-align:right;"> Affx-979041050 </th>
+   <th style="text-align:right;"> Affx-979041051 </th>
+   <th style="text-align:right;"> Affx-979041053 </th>
+   <th style="text-align:right;"> Affx-979041054 </th>
+   <th style="text-align:right;"> Affx-979041055 </th>
+   <th style="text-align:right;"> Affx-979041057 </th>
+   <th style="text-align:right;"> Affx-979041058 </th>
   </tr>
  </thead>
 <tbody>
@@ -3536,36 +3969,30 @@ font-size: 10px
    <td style="text-align:right;"> 0.02 </td>
    <td style="text-align:right;"> 0.02 </td>
    <td style="text-align:right;"> 0.43 </td>
-   <td style="text-align:right;"> 0.90 </td>
+   <td style="text-align:right;"> 0.91 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.02 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> ADE </td>
    <td style="text-align:right;"> 0.05 </td>
-   <td style="text-align:right;"> 0.58 </td>
+   <td style="text-align:right;"> 0.60 </td>
    <td style="text-align:right;"> 1.00 </td>
    <td style="text-align:right;"> 0.10 </td>
-   <td style="text-align:right;"> 0.20 </td>
+   <td style="text-align:right;"> 0.19 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.71 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.86 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> AHI </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.11 </td>
-   <td style="text-align:right;"> 0.33 </td>
+   <td style="text-align:right;"> 0.32 </td>
    <td style="text-align:right;"> 0.14 </td>
    <td style="text-align:right;"> 0.05 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.52 </td>
-   <td style="text-align:right;"> 0.02 </td>
-   <td style="text-align:right;"> 0.09 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> ALT </td>
@@ -3576,20 +4003,16 @@ font-size: 10px
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.19 </td>
-   <td style="text-align:right;"> 0.06 </td>
-   <td style="text-align:right;"> 0.00 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> ANI </td>
    <td style="text-align:right;"> 0.07 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.21 </td>
+   <td style="text-align:right;"> 0.43 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.25 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.00 </td>
+   <td style="text-align:right;"> 0.43 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> ANO </td>
@@ -3600,8 +4023,6 @@ font-size: 10px
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.50 </td>
-   <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.27 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> ARM </td>
@@ -3612,8 +4033,6 @@ font-size: 10px
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.38 </td>
-   <td style="text-align:right;"> 0.06 </td>
-   <td style="text-align:right;"> 0.06 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> ARN </td>
@@ -3624,20 +4043,16 @@ font-size: 10px
    <td style="text-align:right;"> 0.03 </td>
    <td style="text-align:right;"> 0.03 </td>
    <td style="text-align:right;"> 0.44 </td>
-   <td style="text-align:right;"> 0.06 </td>
-   <td style="text-align:right;"> 0.03 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> BAV </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.27 </td>
-   <td style="text-align:right;"> 0.57 </td>
+   <td style="text-align:right;"> 0.55 </td>
    <td style="text-align:right;"> 0.00 </td>
-   <td style="text-align:right;"> 0.10 </td>
+   <td style="text-align:right;"> 0.09 </td>
    <td style="text-align:right;"> 0.36 </td>
-   <td style="text-align:right;"> 0.05 </td>
-   <td style="text-align:right;"> 0.00 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> BAY </td>
@@ -3648,24 +4063,11 @@ font-size: 10px
    <td style="text-align:right;"> 0.03 </td>
    <td style="text-align:right;"> 0.00 </td>
    <td style="text-align:right;"> 0.17 </td>
-   <td style="text-align:right;"> 0.03 </td>
-   <td style="text-align:right;"> 0.00 </td>
   </tr>
 </tbody>
 </table>
 
 </div>
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>df_freq <span class="sc">%&gt;%</span> <span class="fu">saveRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data/genomic_data/imputed_allele_frequencies.rds&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<p>Comment: The <code>COM</code> population is in the <code>genepop</code> file but not in the outputs from STRUCTURE, why?</p>
-<div class="cell">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">#setdiff(df_freq$pop,prop$POP)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 </section>
 </section>
