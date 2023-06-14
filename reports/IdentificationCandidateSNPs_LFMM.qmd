@@ -1,0 +1,252 @@
+---
+title: "Latent Factor Mixed Models (LFMM) analyses"
+subtitle: "Candidate SNP identification"
+author: "Juliette Archambeau"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+number-sections: true
+format: 
+  html:
+    toc: true
+    toc-depth: 4
+    code-fold: true
+    page-layout: full
+embed-resources: true
+bibliography: references.bib
+editor_options: 
+  chunk_output_type: console
+---
+
+<style type="text/css">
+body {
+   font-size: 15px;
+}
+code.r{
+  font-size: 11px;
+}
+pre {
+  font-size: 11px
+}
+
+table {
+  font-size: 10px
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(dev.args = list(png = list(type = "cairo")))
+knitr::opts_chunk$set(fig.width = 7,fig.height = 5,cache=F)
+options(width = 300)
+library(knitr)      # CRAN v1.26
+library(tidyverse)  # CRAN v1.3.0
+library(readxl)     # CRAN v1.3.1
+library(xtable)
+library(reshape2)
+library(kableExtra)
+library(here)
+library(magrittr)
+library(LEA)
+library(cowplot)
+library(rnaturalearth)
+library(corrplot)
+library(raster)
+library(RColorBrewer)
+
+# my own function for building tables in reports
+source(here("scripts/functions/kable_mydf.R"))
+```
+
+
+# Introduction
+ 
+Document based on @gain2021lea and the [LEA tutorial](https://github.com/bcm-uga/SSMPG2022) provided during the summer school *Software and Statistical Methods for Population Genetics* ([SSMPG 2022](https://ssmpg.sciencesconf.org/); Aussois, September 19-23 2022).
+
+The **latent factor mixed model** (LFMM) is a multivariate mixed regression model that estimates *simultaneously* the effects of environmental variables (fixed effects) and unobserved confounders called latent factors [@frichot2013testing; @caye2019lfmm]. The latent factors are computed both from the genomes and from their environment. They are not representing neutral population structure (i.e. they have less direct interpretations than in ancestry estimation methods). Instead, they can be interpreted as the best estimates of the confounding effects of neutral population structure, leading to environmental effect size estimates with minimal bias.
+
+# The data
+
+## Genomic data
+
+
+We load the genomic data. The genomic has to be allele counts without missing data, with individuals (genotypes) in rows and SNPs in columns.
+
+```{r LoadImputedAlleleCounts}
+# we load the imputed genomic data with allele counts (and without MAF)
+geno <-  read.csv(here("data/genomic_data/imputed_allele_counts_withoutmaf.csv"),
+                          row.names = 1) %>% 
+  t() %>% 
+  as.data.frame()
+
+geno[1:10,1:10] %>% kable_mydf()
+```
+
+
+
+## Climatic data
+
+
+We load the population-specific climatic information for the climatic variables of interest. To run `lfmm2`, individuals (genotypes in our case) have to be in rows and climatic variables in columns.
+
+The past and future climatic data have been scaled with the parameters (mean and variance) of the past climatic data (which is done by the function `generate_clim_datatsets`).
+
+
+```{r LoadClimaticData}
+# Selected climatic variables
+# ===========================
+clim_var <- c("bio1","bio12","bio15","bio3","bio4","SHM")
+
+
+# Past and future climatic data
+# =============================
+source(here("scripts/functions/generate_scaled_clim_datasets.R"))
+clim_dfs <- generate_scaled_clim_datasets(clim_var)
+```
+
+We attribute climatic values to each genotype, i.e. genotypes from the same populations will have the same climatic values.
+
+```{r GenotypeLevelClimaticVariables}
+genotypes <- geno %>% 
+  rownames_to_column("individual") %>% 
+  dplyr::select(individual) %>% 
+  as_tibble()
+
+clim_ref <- genotypes %>% 
+  mutate(pop = str_sub(individual,1,3)) %>% 
+  left_join(clim_dfs$clim_ref, by="pop") %>% 
+  dplyr::select(-pop,-individual)
+```
+
+
+# Identifying candidate SNPs
+
+## Run lfmm2 {#sec-LFMMequation}
+
+
+From @caye2019lfmm: LFMMs are regression models combining fixed and latent effects as follows:
+
+$$ \mathbf{Y}  = \mathbf{XB}^T + \mathbf{W} + \mathbf{E}$$
+
+$\mathbf{Y}$ is the response matrix, which records data for $n$ individuals genotyped for $p$ genetic markers. $\mathbf{X}$ is the matrix of the *environmental* or *primary* variables. *Nuisance* variables such as observed confounders can be included in the $\mathbf{X}$ matrix, which dimension is then $n \times d$, where $d$ represents the total number of *primary* and *nuisance* variables.
+The fixed effect sizes are recorded in the $\mathbf{B}$ matrix, which has dimension $p \times d$.
+The $\mathbf{E}$ matrix represents residual errors, and it has the same dimensions as the response matrix. 
+The matrix $\mathbf{W}$ is a “latent matrix” of rank $K$,defined by $K$ latent factors. The $K$ latent factors represent unobserved confounders which are modeled through an $n \times K$ matrix, $\mathbf{U}$.The matrix $\mathbf{U}$ is obtained from a singular value decomposition (SVD) of the matrix $\mathbf{W}$ as follows
+
+$$\mathbf{W} = \mathbf{UV}^T $$
+
+where $\mathbf{V}$ is a $p \times K$ matrix of loadings. The $\mathbf{U}$ and $\mathbf{V}$ matrices are unique up to arbitrary signs for the factors and loadings.
+
+As there are 10 gene pools in maritime pine (all represented in our population sample), we run the LFMM model with **K=9**.
+
+```{r RunLFMMmodel}
+mod_lfmm2 <- lfmm2(input = geno,
+                   env = clim_ref, 
+                   K = 9)
+```
+
+The function `lfmm2` returns an object of class `lfmm2Class` that contains the $\mathbf{U}$ and $\mathbf{V}$ matrices.
+
+## Calibration issues
+
+
+With the function `lfmm2.test`, we can get a vector of p-values for association between loci and climatic variables adjusted for latent factors computed by `lfmm2`. 
+
+**The `full` option:**
+
+  - If `FALSE`, the function `lfmm2.test` computes significance values (p-values) from *standard Student tests* for each climatic variable.
+
+  - If `TRUE`, the function `lfmm2.test` returns p-values for the full set of climatic variables (a single value at each locus) using *Fisher tests*.
+
+
+**The `genomic.control` option:**
+
+  - If `TRUE` (**default option**), the p-values are recalibrated by using genomic control after correction for confounding.
+  
+  - If `FALSE`, the p-values are not recalibrated. 
+
+We can check if the p-values are well calibrated or not with the histograms of the p-values: ideally, they should be flat with a peak close to zero. In the two graphs below, we show the distribution of the non-calibrated (left graph) and calibrated (right graph) p-values. We can see that it is important to set the `genomic.control` to its default value `TRUE` if we want the p-values to be well calibrated. 
+
+```{r HistogramPValues, fig.width=10}
+par(mfrow=c(1,2))
+
+# Histogram of non-calibrated p-values
+# ------------------------------------
+lfmm2.test(object = mod_lfmm2, input = geno, env = clim_ref, full = TRUE, genomic.control = FALSE)$pvalues %>% 
+hist(col = "orange", 
+     main="Histogram of non-calibrated p-values",
+     xlab="p-values")
+
+# Histogram of calibrated p-values
+# --------------------------------
+lfmm2.test(object = mod_lfmm2, input = geno, env = clim_ref, full = TRUE, genomic.control = TRUE)$pvalues %>% 
+hist(col = "orange", 
+     main="Histogram of calibrated p-values",
+     xlab="p-values")
+```
+
+In the following analyses, we use the default `genomic.control=TRUE` and `full=TRUE`, so all climatic variables are used in the test. 
+
+```{r ComputingPValues}
+test_lfmm2 <- lfmm2.test(object = mod_lfmm2,
+                       input = geno,
+                       env = clim_ref, 
+                       full = TRUE,
+                       genomic.control = TRUE)
+
+pv_lfmm2 <- test_lfmm2$pvalues
+
+plot(-log10(pv_lfmm2 ), 
+     cex = .3, 
+     col = "blue",
+     xlab = "Locus",  
+     ylab = "-log10(P)", 
+     main="Manhattan plot of log10 p-values")
+```
+
+## Multiple testing and calibration issues
+
+We want to use the FDR control algorithm to correct for **multiple testing** and determine which loci have significant levels of association. The **False Discovery Rate (FDR)** is defined as: 
+
+**FDR = prob(False Discovery | Positive test) = *q***.
+
+The FDR algorithm requires that the tests are correctly calibrated, i.e. that the distribution of p-values is uniform when we assume that the null hypothesis, $H0$, is correct. That's ok in our case, we have already checked it above with the histogram of p-values.
+
+<span style="color: red;">**Which FDR level do we use?**</span>
+
+```{r SetFDRlevel}
+fdr_level <- 0.05
+```
+
+To identify the candidate SNPs, we apply the chosen FDR control to the p-values, which converts them into q-values. And then we identify candidates as those with q-values below a given FDR threshold.
+
+The candidate SNPs at the FDR level of `r fdr_level * 100`% are shown with circles on the Manhattan plot below. The orange line corresponds to the Bonferroni threshold for a type I error of 10%.
+
+```{r FDRcorrection}
+# applying FDR control method to obtain q-values
+qv_lfmm2  <- qvalue::qvalue(pv_lfmm2, fdr.level = fdr_level)
+
+# Manhattan plot
+plot(-log10(pv_lfmm2 ), 
+     cex = .3, 
+     col = "blue",
+     xlab = "Locus",  
+     ylab = "-log10(P)", 
+     main="Manhattan plot of log10 p-values")
+
+# Show with an orange line the Bonferonni multiple testing threshold for significance
+abline(h = -log10(0.1/ncol(geno)), col = "orange")
+
+# Extract the list of candidates
+candidates <- which(qv_lfmm2$significant)
+
+# Show with circles the list of candidate loci at the chosen FDR level
+points(candidates, -log10(pv_lfmm2)[candidates], cex = .9, col = "brown")
+```
+
+
+```{r NamesCandidateSNPs}
+candidates <- names(geno)[candidates]
+
+saveRDS(candidates, here("outputs/LFMM/candidates.rds"))
+```
+
+<span style="color: red;">We obtain `r length(candidates)` candidate SNPs.</span>
+
