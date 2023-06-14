@@ -14,3 +14,6 @@
 
 
 -   [IdentificationCandidateSNPs_BayPass.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/IdentificationCandidateSNPs_BayPass.html) Identifying candidate SNPs with BayPass.
+
+
+-   [IdentificationCandidateSNPs_LFMM.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/IdentificationCandidateSNPs_LFMM.html) Identifying candidate SNPs with latent factor mixed models (LFMM).
