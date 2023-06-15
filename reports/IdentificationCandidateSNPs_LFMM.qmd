@@ -1,6 +1,6 @@
 ---
 title: "Latent Factor Mixed Models (LFMM) analyses"
-subtitle: "Candidate SNP identification"
+subtitle: "Variance partitioning and candidate SNP identification"
 author: "Juliette Archambeau"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 number-sections: true
