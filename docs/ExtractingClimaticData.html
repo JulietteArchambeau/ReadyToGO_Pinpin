@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Juliette Archambeau &amp; Adélaïde Theraroz">
-<meta name="dcterms.date" content="2023-06-08">
+<meta name="dcterms.date" content="2023-06-14">
 
 <title>Extracting climatic data - Population locations</title>
 <style>
@@ -2852,7 +2852,7 @@ border: 0;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 8, 2023</p>
+      <p class="date">June 14, 2023</p>
     </div>
   </div>
     
@@ -4023,7 +4023,7 @@ font-size: 10px
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>pop_tokeep <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data/genomic_data/imputed_allele_frequencies.rds&quot;</span>)) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(pop)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>pop_tokeep <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">here</span>(<span class="st">&quot;data/genomic_data/imputed_allele_frequencies_withoutmaf.csv&quot;</span>)) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(pop)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>The genomic data contain 83 populations.</p>
@@ -4034,7 +4034,9 @@ font-size: 10px
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pop <span class="sc">%in%</span> pop_tokeep) <span class="sc">%&gt;%</span> </span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(pop)</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="sc">%&gt;%</span> <span class="fu">kable_mydf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="sc">%&gt;%</span> <span class="fu">write_csv</span>(<span class="fu">here</span>(<span class="st">&quot;data/selected_populations_GOanalyses.csv&quot;</span>))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>pop_coord <span class="sc">%&gt;%</span> <span class="fu">kable_mydf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 
