@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Juliette Archambeau &amp; Adélaïde Theraroz">
-<meta name="dcterms.date" content="2023-06-09">
+<meta name="dcterms.date" content="2023-06-15">
 
 <title>Formatting and cleaning the genomic data</title>
 <style>
@@ -2848,6 +2848,7 @@ border: 0;
   <li><a href="#individual-level-allele-counts" id="toc-individual-level-allele-counts" class="nav-link" data-scroll-target="#individual-level-allele-counts"><span class="toc-section-number">7.1</span>  Individual-level allele counts</a></li>
   <li><a href="#population-allele-frequencies" id="toc-population-allele-frequencies" class="nav-link" data-scroll-target="#population-allele-frequencies"><span class="toc-section-number">7.2</span>  Population allele frequencies</a></li>
   </ul></li>
+  <li><a href="#main-gene-pool-of-each-individual-and-population" id="toc-main-gene-pool-of-each-individual-and-population" class="nav-link" data-scroll-target="#main-gene-pool-of-each-individual-and-population"><span class="toc-section-number">8</span>  Main gene pool of each individual and population</a></li>
   </ul>
 </nav>
 </div>
@@ -2872,7 +2873,7 @@ border: 0;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 9, 2023</p>
+      <p class="date">June 15, 2023</p>
     </div>
   </div>
     
@@ -4070,6 +4071,126 @@ font-size: 10px
 </div>
 </div>
 </section>
+</section>
+<section id="main-gene-pool-of-each-individual-and-population" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Main gene pool of each individual and population</h1>
+<p>For further analyses, it will be useful to have a dataset with the main gene pool of each individual and population, which we do below.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Incorporating gene pool information</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="co"># -----------------------------------</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>genotypes <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">&quot;data/genomic_data/filtered_allele_counts_withmaf.csv&quot;</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>snp) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>() </span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>gps <span class="ot">&lt;-</span> gp <span class="sc">%&gt;%</span> </span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">main_gp_ind_code =</span> K_main) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Population =</span> <span class="fu">str_sub</span>(Individual,<span class="dv">1</span>,<span class="dv">3</span>),</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">main_gp_ind =</span> <span class="fu">case_when</span>(main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K1&quot;</span> <span class="sc">~</span> <span class="st">&quot;Central Spain&quot;</span>,</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>                                 main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K2&quot;</span> <span class="sc">~</span> <span class="st">&quot;Corsica&quot;</span>,</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>                                 main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K3&quot;</span> <span class="sc">~</span> <span class="st">&quot;Morocco&quot;</span>,</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>                                 main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K4&quot;</span> <span class="sc">~</span> <span class="st">&quot;Atlantic France&quot;</span>,</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>                                 main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K5&quot;</span> <span class="sc">~</span> <span class="st">&quot;Atlantic Iberian Peninsula&quot;</span>,</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>                                 main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K6&quot;</span> <span class="sc">~</span> <span class="st">&quot;Tunisia-Pantelleria&quot;</span>,</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>                                 main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K7&quot;</span> <span class="sc">~</span> <span class="st">&quot;Southeastern Spain&quot;</span>,</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>                                 main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K8&quot;</span> <span class="sc">~</span> <span class="st">&quot;Fuencaliente&quot;</span>,</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>                                 main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K9&quot;</span> <span class="sc">~</span> <span class="st">&quot;North-east&quot;</span>,</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>                                 main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K10&quot;</span> <span class="sc">~</span> <span class="st">&quot;Point-Cires&quot;</span>),</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>         <span class="at">main_gp_ind_color =</span> <span class="fu">case_when</span>(main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K1&quot;</span> <span class="sc">~</span> <span class="st">&quot;#ffc100&quot;</span>,</span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>                                       main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K2&quot;</span> <span class="sc">~</span> <span class="st">&quot;#07ae00&quot;</span>,</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>                                       main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K3&quot;</span> <span class="sc">~</span> <span class="st">&quot;#ffec18&quot;</span>,</span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>                                       main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K4&quot;</span> <span class="sc">~</span> <span class="st">&quot;#bd08dd&quot;</span>,</span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>                                       main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K5&quot;</span> <span class="sc">~</span> <span class="st">&quot;#fa0000&quot;</span>,</span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>                                       main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K6&quot;</span> <span class="sc">~</span> <span class="st">&quot;#ff009d&quot;</span>,</span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>                                       main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K7&quot;</span> <span class="sc">~</span> <span class="st">&quot;#31f36d&quot;</span>,</span>
+<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a>                                       main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K8&quot;</span> <span class="sc">~</span> <span class="st">&quot;#15d8ef&quot;</span>,</span>
+<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a>                                       main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K9&quot;</span> <span class="sc">~</span> <span class="st">&quot;#ffa89d&quot;</span>,</span>
+<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a>                                       main_gp_ind_code <span class="sc">==</span> <span class="st">&quot;K10&quot;</span> <span class="sc">~</span> <span class="st">&quot;#3311da&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Population, Individual, <span class="fu">everything</span>(), <span class="sc">-</span>K_max) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(Individual <span class="sc">%in%</span> genotypes)</span>
+<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-34"><a href="#cb29-34" aria-hidden="true" tabindex="-1"></a>gps_list <span class="ot">&lt;-</span> gps <span class="sc">%&gt;%</span> </span>
+<span id="cb29-35"><a href="#cb29-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Population) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-36"><a href="#cb29-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb29-37"><a href="#cb29-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setNames</span>(<span class="fu">unique</span>(gps<span class="sc">$</span>Population))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>We identify the populations for which the main gene pool is not the same for all genotypes:</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>gps_list <span class="sc">%&gt;%</span> </span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map_dfr</span>(\(x) {</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">Populations =</span> <span class="fu">unique</span>(x<span class="sc">$</span>Population),</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">main_gp_number =</span> x<span class="sc">$</span>main_gp_ind_code <span class="sc">%&gt;%</span> <span class="fu">unique</span>() <span class="sc">%&gt;%</span> <span class="fu">length</span>())</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">%&gt;%</span> </span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(main_gp_number) <span class="sc">%&gt;%</span> </span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>()  <span class="sc">%&gt;%</span> </span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map_dfr</span>(\(x) {</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">Populations =</span> <span class="fu">paste0</span>(x<span class="sc">$</span>Populations, <span class="at">collapse =</span><span class="st">&quot;, &quot;</span>),</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">main_gp_number =</span> <span class="fu">unique</span>(x<span class="sc">$</span>main_gp_number))</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">%&gt;%</span> </span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_mydf</span>(<span class="at">boldfirstcolumn =</span> F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+
+<table class="table table-hover table-condensed table-responsive" style="font-size: 10px; width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Populations </th>
+   <th style="text-align:right;"> main_gp_number </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> ABA, ADE, AHI, ALT, ANI, ANO, ARM, ARN, BAV, BAY, BEN, BOI, BON, CAD, CAG, CAR, CAS, CEN, COC, COD, COM, CPA, CUE, EST, FUE, GAU, GEA, GIR, GUA, HOU, JUB, KUD, LAC, LAM, LCO, LEI, LIM, MAB, MAD, MAG, MAU, MAZ, MIM, MON, MUR, OLB, OLO, ONA, ORI, PAN, PCI, PDL, PET, PFQ, PIN, PLE, PUE, QUA, QUI, SAC, SAL, SCD, SEG, SID, SIE, SIN, SOB, STJ, TAJ, TAL, TAM, TBY, TOC, VER, VMA, VMQ </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> CAZ, PEZ, RIO, SAH, SEB </td>
+   <td style="text-align:right;"> 2 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> MTG, ROS </td>
+   <td style="text-align:right;"> 3 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<p>Some populations have some individuals that belong to different gene pools so we have to account for these individuals when we generate a dataset with the main gene pool of each population.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extracting the main gene pool of each population</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>gp_poplevel <span class="ot">&lt;-</span> gps_list <span class="sc">%&gt;%</span> </span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">modify</span>(\(x) <span class="fu">mutate</span>(x, <span class="at">main_gp_pop=</span> x<span class="sc">$</span>main_gp_ind  <span class="sc">%&gt;%</span> <span class="fu">table</span>() <span class="sc">%&gt;%</span> <span class="fu">which.max</span>() <span class="sc">%&gt;%</span> <span class="fu">names</span>())) <span class="sc">%&gt;%</span> </span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Population, main_gp_pop) <span class="sc">%&gt;%</span> </span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Information of the main gene pool for each pop</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>gp_poplevel <span class="ot">&lt;-</span> gps <span class="sc">%&gt;%</span> </span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(main_gp_ind,main_gp_ind_color) <span class="sc">%&gt;%</span> </span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">main_gp_pop=</span>main_gp_ind,</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>                <span class="at">main_gp_pop_color=</span>main_gp_ind_color) <span class="sc">%&gt;%</span> </span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">right_join</span>(gp_poplevel,<span class="at">by=</span><span class="st">&quot;main_gp_pop&quot;</span>) </span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Information of the main gene pool for each clone</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>gps <span class="ot">&lt;-</span> gp_poplevel <span class="sc">%&gt;%</span> </span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">right_join</span>(gps, <span class="at">by=</span><span class="st">&quot;Population&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(Individual) <span class="co"># The clone order has to be the same as in the genomic data</span></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(<span class="at">pop_level=</span>gp_poplevel,</span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>     <span class="at">ind_level=</span>gps) <span class="sc">%&gt;%</span> </span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(<span class="fu">here</span>(<span class="st">&quot;data/genomic_data/main_gp_info.rds&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
 </section>
 
 </main>
