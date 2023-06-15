@@ -86,7 +86,7 @@ This dataset contains `r nrow(pop_coord)` populations.
 We are going to keep only the populations that will be used in the following analyses (i.e. GEAs and genomic offset estimation). For that, we load the population-level allele frequencies that will be used in the GEA analyses and we extract the population names:
 
 ```{r PopToKeep}
-pop_tokeep <- readRDS(here("data/genomic_data/imputed_allele_frequencies.rds")) %>% pull(pop)
+pop_tokeep <- read.csv(here("data/genomic_data/imputed_allele_frequencies_withoutmaf.csv")) %>% pull(pop)
 ```
 
 The genomic data contain `r length(pop_tokeep)` populations.
@@ -95,6 +95,8 @@ The genomic data contain `r length(pop_tokeep)` populations.
 pop_coord <- pop_coord %>% 
   filter(pop %in% pop_tokeep) %>% 
   arrange(pop)
+
+pop_coord %>% write_csv(here("data/selected_populations_GOanalyses.csv"))
 
 pop_coord %>% kable_mydf()
 ```
