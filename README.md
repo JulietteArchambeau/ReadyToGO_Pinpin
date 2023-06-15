@@ -18,7 +18,7 @@
 
 -   [IdentificationCandidateSNPs_LFMM.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/IdentificationCandidateSNPs_LFMM.html) Identifying candidate SNPs with latent factor mixed models (LFMM).
 
--   [IdentificationCandidateSNPs_RDA.html](https://juliettearchambeau.github.io/GOPredEvalPinpin/IdentificationCandidateSNPs_RDA.html) Variance partitioning and identification of the candidate SNPs using Redundancy analysis (RDA) (approach developed in [Capblancq et al. 2018](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.12906) and [Capblancq and Forester 2021](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13722)).
+-   [IdentificationCandidateSNPs_RDA.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/IdentificationCandidateSNPs_RDA.html) Variance partitioning and identification of the candidate SNPs using Redundancy analysis (RDA) (approach developed in [Capblancq et al. 2018](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.12906) and [Capblancq and Forester 2021](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13722)).
     
     *  <a href="https://juliettearchambeau.github.io/ReadyToGO_Pinpin/PCAplot.pdf" target="_blank">PCAplot.pdf</a> Principal component analysis performed on the population allele frequencies. The first three axes of the PCA are used to account for the population structure in the RDA analysis.
  
