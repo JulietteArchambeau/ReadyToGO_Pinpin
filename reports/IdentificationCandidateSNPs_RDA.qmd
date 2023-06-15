@@ -1,0 +1,1014 @@
+---
+title: "Redundancy Analysis (RDA)"
+subtitle: "Candidate SNP identification & variance partitioning"
+author: "Juliette Archambeau & Adélaïde Theraroz"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+number-sections: true
+format: 
+  html:
+    toc: true
+    toc-depth: 4
+    code-fold: true
+    page-layout: full
+embed-resources: true
+bibliography: references.bib
+editor_options: 
+  chunk_output_type: console
+---
+
+<style type="text/css">
+body {
+   font-size: 15px;
+}
+code.r{
+  font-size: 11px;
+}
+pre {
+  font-size: 11px
+}
+
+table {
+  font-size: 10px
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(dev.args = list(png = list(type = "cairo")))
+knitr::opts_chunk$set(fig.width = 7,fig.height = 5,cache=F)
+options(width = 300)
+library(knitr)      # CRAN v1.26
+library(tidyverse)  # CRAN v1.3.0
+library(readxl)     # CRAN v1.3.1
+library(xtable)
+library(reshape2)
+library(kableExtra)
+library(here)
+library(magrittr)
+library(vegan)
+library(cowplot)
+library(rnaturalearth)
+library(corrplot)
+library(adespatial) # to calculate the Moran eigen vectors
+library(raster)
+library(RColorBrewer)
+library(ggpubr)
+library(robust)
+library(qvalue)
+
+# Functions
+source(here("scripts/functions/kable_mydf.R")) # my own function for building tables in reports
+source(here("scripts/functions/rdadapt.R")) # to conduct a RDA based genome scan (from Capblancq & Forester 2021)
+source(here("scripts/functions/detectoutliers.R")) # to identify outliers based on their RDA loadings (from  Forester et al. 2018)
+```
+
+
+# Introduction
+
+Most analyses conducted in this document are based on:
+
+  - @forester2018comparing and the associated [vignette](https://popgen.nescent.org/2018-03-27_RDA_GEA.html). 
+  
+  - @capblancq2021redundancy and the associated [Github repository](https://github.com/Capblancq/RDA-landscape-genomics).
+  
+
+RDA can either be performed on *individual-based genotypes* (i.e. allele counts 0, 1 or 2) or *population-based allele frequencies*. @forester2018comparing suggests to use individual-based allele counts when most samples have individual coordinates and individual environment data (which depends on the resolution of the environmental data across the study area). In the present study, we use *population-level allele frequencies* as several genotypes were collected at each sampling site (i.e. source population) and therefore experience the same climatic conditions. Moreover, the sample sizes vary across populations.
+
+  
+# The data
+
+
+## Climatic data
+
+We load the population-specific climatic information for the climatic variables of interest.
+
+```{r LoadClimaticData}
+# set of climatic variables that we are going to use
+clim_var <- c("bio1","bio12","bio15","bio3","bio4","SHM")
+
+# loading climatic data and mean-standardizing them
+df <- readRDS(here("data/climatic_data/reference_climate_population_locations.rds")) %>% 
+  dplyr::mutate(across(where(is.numeric), ~ (. - mean(.)) / sd(.))) %>% 
+  arrange(pop) # to be sure that climatic data and genomic data are in the same order
+```
+
+```{r ColorClimVar}
+# Define the colors associated with each climatic variable for the following visualizations
+color_clim_var <- sample(c('#1f78b4','#a6cee3','#6a3d9a','#e31a1c','#33a02c','#ffff33','#fb9a99',
+                    '#FF7FE6', '#FFB675', '#51FF74','#B4FF32'), length(clim_var), replace=F) %>% #
+  setNames(clim_var) 
+```
+
+## Population coordinates and Moran eigen's vectors
+
+We use distance-based Moran’s Eigenvector Maps (dbMEMs) for the variance partitioning, as done in @capblancq2023common.
+
+
+```{r LoadPopCoordMEMs}
+df <- read.csv(here("data/selected_populations_GOanalyses.csv")) %>% 
+  dplyr::select(pop,contains("ude")) %>%
+  bind_cols(dbmem(.[,c("longitude","latitude")])) %>%  # we add the distance-based Moran’s Eigenvector Maps (dbMEMs)
+  right_join(df,., by="pop")
+```
+
+
+## Genomic data
+
+### Population-level allele frequencies
+
+```{r LoadGenomicData}
+# Population-based allele frequencies
+# ===================================
+geno_pop <- read.csv(here("data/genomic_data/imputed_allele_frequencies_withoutmaf.csv"),
+                          row.names = 1)
+
+kable_mydf(geno_pop[1:10,1:10] %>% round(3), boldfirstcolumn = T)
+```
+
+The genomic dataset contains contains `r nrow(geno_pop)` populations and `r ncol(geno_pop)` SNPs.
+
+RDA requires complete data frames (i.e., no missing data). Missing data were imputed based on the main gene pool of the individual, i.e. using the most common allele at each SNP (see report `GenomicDataCleaningFormatting.qmd`).
+
+### PC scores{#PCscores}
+
+We account for population structure in the RDA models with PCs from a *principal component analysis* (PCA), which are used as proxies of the population evolutionary history. This is the method used in @capblancq2021redundancy and @capblancq2023common.
+
+As advised in @capblancq2021redundancy, the estimation of the population genetic structure should be performed on genomic data not filtered for minor allele frequencies because small genetic variations are expected to be involved in differentiating neutral genetic groups. So, we use *population-based allele frequencies* not filtered for MAF and imputed for missing data.
+
+
+```{r LoadImtGenDataMAF}
+geno_pop_maf <- read.csv(here("data/genomic_data/imputed_allele_frequencies_withmaf.csv"),
+                          row.names = 1)
+
+kable_mydf(geno_pop_maf[1:10,1:8], boldfirstcolumn = F)
+```
+
+We run the PCA with the `rda` function of the `vegan` package, which performs a PCA when no predictor is included.
+
+```{r RunPCA, fig.height=4,fig.width=6}
+pca <- rda(geno_pop_maf, scale=T)
+
+# Scree plot of the PCA eigenvalues
+screeplot(pca, type = "barplot", npcs=10, main="Scree plot of the PCA eigenvalues")
+```
+
+We plot the PCA performed on **population-based allele frequencies not filtered for MAF** and the figure is stored in `PCAplot.pdf`.
+
+```{r PlotPCA, fig.width=10,fig.height=6, results="hide"}
+# we load the dataset which gives the main gene pool of each population
+gp <- readRDS(here("data/genomic_data/main_gp_info.rds"))$pop_level %>% arrange(Population)
+
+GPs <- gp$main_gp_pop %>% as.factor()
+bg <- gp %>% 
+  dplyr::select(main_gp_pop, main_gp_pop_color) %>% 
+  distinct() %>% 
+  arrange(main_gp_pop) %>% 
+  pull(main_gp_pop_color)
+
+pdf(width=10,here("figs/RDA/PCAplot.pdf"))
+lapply(list(c(1,2),c(3,4),c(5,6)), function(x){
+  plot(pca, type="n", scaling=3, choices=x,
+       xlab=paste0("PC",x[[1]]," (",round(summary(eigenvals(pca))[2,x[[1]]]*100,2),"%)"),
+       ylab=paste0("PC",x[[2]]," (",round(summary(eigenvals(pca))[2,x[[2]]]*100,2),"%)"))
+  points(pca, display="sites", pch=21, cex=1.3, col="gray32", scaling=3, 
+         bg=bg[GPs], choices=x)
+  if(x[[1]]==1) legend("topleft", legend=levels(GPs), bty="n", col="gray32", pch=21, cex=1, pt.bg=bg)
+recordPlot()})
+dev.off()
+```
+
+Based on the scree plot and the PCA plots, we have to retain a given number of PCs to account for neutral population structure in downstream analyses:
+  
+```{r SetNbPCscores}
+nb_PCscores <- 3
+```
+
+
+<span style="color: red;">**How many axes do you want to keep to account for population structure in the RDA? In the following analyses, I kept the first `r nb_PCscores` PCs.**</span>
+
+```{r MergePCs}
+df <- scores(pca, choices=c(1:nb_PCscores), display="sites", scaling="none") %>% 
+  as.data.frame() %>% 
+  rownames_to_column("pop") %>% 
+  inner_join(df, by="pop")
+```
+
+
+# Variance partitioning
+
+
+We want to disentangle the *relative contribution* of different factors in explaining genetic variation, namely:
+
+  - **climate**
+  
+  - **neutral population structure**, captured by the first `r nb_PCscores` PC scores from the **population-based allele frequencies**. 
+  
+  - **geography**, accounted for by the population coordinates (longitude and latitude) or by distance-based Moran's eigen vector maps. 
+  
+
+We run:
+
+  - one *full* RDA with all factors (population structure, climate and geographical distance), i.e. no variable conditioning.
+  
+  - three *partial* RDA in which the factor of interest is conditioned by the other two factors.
+  
+
+  
+```{r FunctionVarPart}
+# Function to partition the variance
+# ==================================
+
+var_part <- function(df_geno, select_clim_var, df_var, scale_rda, center_rda, geography, nb_dbMEMs){
+
+# The df of the explanatory variables has to include only the variables included in the model
+df_var <- df_var %>% 
+  dplyr::select(all_of(select_clim_var),
+                starts_with("Q"),
+                starts_with("PC"),
+                ends_with("itude"),
+                contains("MEM"),
+                -altitude)
+
+
+# Build formulas of the RDA models
+# ================================
+form_clim_var <- paste(select_clim_var,collapse= " + ") # climatic variables
+form_pgs_var <- colnames(df_var) %>% stringr::str_subset("^Q|^PC") %>%  paste(collapse= " + ") # pop structure
+
+if(geography=="coordinates"){
+  form_geo_var <- colnames(df_var) %>% stringr::str_subset("itude") %>%  paste(collapse= " + ") # coordinates
+} else {
+  form_geo_var <- colnames(df_var) %>%  
+    stringr::str_subset("MEM") %>%  
+   `[`(1:nb_dbMEMs) %>% # keep only the n first MEMs
+    paste(collapse= " + ") # coordinates
+}
+
+# complete model formulas
+form_full_rda <- paste("df_geno ~ ",
+                       paste(c(form_clim_var,form_pgs_var,form_geo_var),collapse=" + " )) %>% 
+  as.formula()
+
+form_clim_rda <- paste("df_geno ~ ",
+                       form_clim_var,"+ Condition(",paste(c(form_pgs_var,form_geo_var),collapse=" + " ), ")") %>% 
+  as.formula()
+
+form_pgs_rda <- paste("df_geno ~ ",
+                       form_pgs_var,"+ Condition(",paste(c(form_clim_var,form_geo_var),collapse=" + " ), ")") %>% 
+  as.formula()
+
+form.geo_rda <- paste("df_geno ~ ",
+                       form_geo_var,"+ Condition(",paste(c(form_clim_var,form_pgs_var),collapse=" + " ), ")") %>% 
+  as.formula()
+
+
+# Run the RDA models
+# ==================
+
+# Full RDA
+full_rda <- rda(form_full_rda, 
+                data=df_var, 
+                scale=scale_rda,
+                center=center_rda) 
+anova_full_rda <- anova(full_rda)
+
+# Partial RDA: pure climatic model
+clim_rda <- rda(form_clim_rda, 
+                data=df_var, 
+                scale=scale_rda,
+                center=center_rda)
+anova_clim_rda <- anova(clim_rda)
+
+# Partial RDA: pure neutral population structure model
+pgs_rda <- rda(form_pgs_rda, 
+               data=df_var, 
+               scale=scale_rda,
+               center=center_rda)
+anova_pgs_rda <- anova(pgs_rda)
+
+# Partial RDA: pure geography model
+geo_rda <- rda(form.geo_rda,
+               data=df_var, 
+               scale=scale_rda,
+               center=center_rda)
+anova_geo_rda <- anova(geo_rda)
+
+
+# Summary table
+# =============
+
+sum_tab_RDA <- tibble("RDA models"=c("Full model: Y ~ clim + geo + pgs.",
+                      "Pure climate model: Y ~ clim | (geo + pgs)",
+                      "Pure pop. gen. structure model: Y ~ pgs | (geo + clim)",
+                      "Pure geography model: Y ~ geo | (pgs + clim)"),
+       "Total exp. variance"=c(RsquareAdj(full_rda)[[1]],
+              RsquareAdj(clim_rda)[[1]],
+              RsquareAdj(pgs_rda)[[1]],
+              RsquareAdj(geo_rda)[[1]]),
+       "Relative exp. variance"=c(1,
+                                  RsquareAdj(clim_rda)[[1]]/RsquareAdj(full_rda)[[1]],
+                                  RsquareAdj(pgs_rda)[[1]]/RsquareAdj(full_rda)[[1]],
+                                  RsquareAdj(geo_rda)[[1]]/RsquareAdj(full_rda)[[1]]),
+       "P-value"=c(anova_full_rda[["Pr(>F)"]][[1]],
+                   anova_clim_rda[["Pr(>F)"]][[1]],
+                   anova_pgs_rda[["Pr(>F)"]][[1]],
+                   anova_geo_rda[["Pr(>F)"]][[1]]))
+
+# Export the table in latex
+xtable(sum_tab_RDA, type = "latex",digits=2) %>% 
+  print(file = here(paste0("tables/variance_partitioning_RDA_",geography,".tex")), include.rownames=FALSE)
+
+return(sum_tab_RDA)
+}
+```
+
+```{r OptionVarPart}
+# Proxies of geography
+geography <- c("coordinates","dbMEMs")
+
+# number of distance-based Moran’s Eigenvector Maps (dbMEMs)
+nb_dbMEMs <- 4
+```
+
+```{r CalculateVariancePartitioning, eval=F}
+lapply(geography, function(x){
+  
+  var_part <- var_part(df_geno=geno_pop, # we use the genomic data without MAF
+                       select_clim_var=clim_var,
+                       df_var=df, 
+                       scale_rda=F,center_rda=F,
+                       geography = x,
+                       nb_dbMEMs = nb_dbMEMs)
+  
+}) %>% 
+  setNames(geography) %>% 
+   saveRDS(file=here(paste0("outputs/RDA/variance_partitioning.rds")))
+```
+
+
+Variance partitioning with geographical coordinates (i.e. latitude and longitude) as proxies of geography.
+
+```{r ShowSummaryVarPartGeographicalCoordinates, eval=T}
+readRDS(file=here("outputs/RDA/variance_partitioning.rds"))[[1]] %>% 
+  kable_mydf(boldfirstcolumn = T)
+```
+
+Variance partitioning with distance-based Moran’s Eigenvector Maps (dbMEMs) as proxies of geography.
+
+```{r ShowSummaryVarPartMEMs, eval=T}
+readRDS(file=here("outputs/RDA/variance_partitioning.rds"))[[2]] %>% 
+  kable_mydf(boldfirstcolumn = T)
+```
+
+
+
+# Identifying loci under selection
+
+  
+## Run the RDA
+
+We perform RDA models accounting or not for the neutral genetic population structure.
+
+RDA summary statistics are summarized in the pdfs `RDAsummary.pdf` and the RDA plots colored by gene pool are shown in the pdfs `RDAplots.pdf`.
+
+```{r FunctionToRunRDAmodels}
+# =========
+# FUNCTIONS
+# =========
+
+
+# Function to create a S3 object with the RDA model and some info
+# ===============================================================
+new_RDA <- function(form_rda,selected_var,PCs,mod_rda,r2,eigenvalues,model_significance,axis_significance,vif){
+  
+  structure(
+    .Data = list(form_rda=form_rda,
+                 selected_var=selected_var,
+                 PCs=PCs,
+                 mod_rda=mod_rda,
+                 r2=r2,
+                 eigenvalues=eigenvalues,
+                 model_significance=model_significance,
+                 axis_significance=axis_significance,
+                 vif=vif),
+    creation_time = Sys.time(),
+    class = "myrda"
+  )
+  }
+
+
+
+# Function to print S3 object of class 'myrda'
+# ============================================
+print.myrda <- function(x,...){
+
+  print_message <- c(
+    paste0("  RDA formula: ", x$form_rda),
+    paste0("  Creation time: ", format(attr(x, "creation_time"))),
+    paste0(c("  List elements:", names(x)),collapse="   ")
+    )
+
+  cat(
+    print_message,
+    sep = "\n"
+  )
+
+}
+
+
+# Function to run the RDA models and store the info in a S3 object of class 'myrda'
+# =================================================================================
+runRDA <- function(df,geno_pop,selected_var,pop_structure_correction){
+
+
+  
+  # write RDA formulas
+form_clim_var <- paste(selected_var,collapse= " + ")
+if(pop_structure_correction==T) {
+  PCs <- colnames(df) %>% stringr::str_subset("^PC")
+  form_pgs_var <- PCs %>%  paste(collapse= " + ")
+  form_rda <- paste("geno_pop ~ ", form_clim_var,"+ Condition(",paste(c(form_pgs_var),collapse=" + " ), ")")
+} else {
+  PCs = NULL
+  form_rda <- paste("geno_pop ~ ", form_clim_var) 
+  }
+mod_rda <- rda(as.formula(form_rda), df)
+r2 <- RsquareAdj(mod_rda)
+eigenvalues <- summary(eigenvals(mod_rda, model = "constrained"))
+model_significance <- anova.cca(mod_rda, parallel=getOption("mc.cores")) # default is permutation=999
+axis_significance <- anova.cca(mod_rda, by="axis", parallel=getOption("mc.cores"))
+vif <- vif.cca(mod_rda)
+
+return(new_RDA(form_rda=form_rda,
+               selected_var=selected_var,
+               PCs=PCs,
+               mod_rda=mod_rda,
+               r2=r2,
+               eigenvalues=eigenvalues,
+               model_significance=model_significance,
+               axis_significance=axis_significance,
+               vif=vif))
+  
+}
+
+
+
+# Function to generate a pdf with the RDA model outputs
+# =====================================================
+viz_RDAsummary <- function(x){
+  
+  # check the class of x
+  stopifnot("x is not of class myrda" = class(x)=="myrda")
+  
+  # Generate R2 table
+r2_tab <- x$r2 %>% 
+  as.data.frame() %>%
+  pivot_longer(everything()) %>%  
+  column_to_rownames(var ="name") %>% 
+  round(2) %>% 
+  ggtexttable(rows = row.names(.),cols = NULL, theme = ttheme("blank"))
+  
+  # Generate table of eigenvalues and proportion of variance explained
+eigenvalues_tab <- x$eigenvalues %>% 
+  as.data.frame() %>% 
+  round(2) %>% 
+  ggtexttable(rows = rownames(.), theme = ttheme("blank")) %>% 
+  tab_add_hline(at.row = 1:2, row.side = "top", linewidth = 2)
+
+  # Generate table of model and axis significance
+signi_tab <- bind_rows(as.data.frame(x$model_significance[-nrow(x$model_significance),]),
+          as.data.frame(x$axis_significance[-nrow(x$axis_significance),])) %>% 
+  dplyr::mutate(across(!Df, ~ round(.x,3))) %>% 
+  ggtexttable(rows = rownames(.), theme = ttheme("blank")) %>% 
+  tab_add_hline(at.row = 1:2, row.side = "top", linewidth = 2) %>% 
+  tab_add_hline(at.row = 3, row.side = "top", linewidth = 0.01)
+
+  # Generate table for VIF (Variance Inflation Factors)
+vif_tab <- x$vif %>% 
+  as.data.frame() %>% 
+  round(2) %>% 
+  rownames_to_column("Variable") %>%
+  pivot_wider(values_from=".", names_from = "Variable") %>% 
+  ggtexttable(rows = "VIF", theme = ttheme("blank")) %>% 
+  tab_add_hline(at.row = 2, row.side = "top", linewidth = 2) 
+  
+  # Generate the screeplot of the eigenvalues
+ggscreeplot <- x$eigenvalues %>% #
+  as.data.frame() %>% 
+  dplyr::filter(row.names(.) == "Eigenvalue")  %>% 
+  pivot_longer(everything(),names_to="PC",values_to="eigenvalues") %>%
+  ggplot(aes(x= PC,
+             y=eigenvalues,
+             group=1)) +
+  geom_point(size=4)+
+  geom_line() +
+  ylab("Eigen values") + xlab("") + 
+  labs(title="Scree plot") + 
+  theme_bw()
+
+
+ggarrange(ggarrange(r2_tab,signi_tab,vif_tab,nrow=3),
+           ggarrange(eigenvalues_tab,ggscreeplot,nrow=2), 
+           nrow = 1, 
+           ncol = 2) %>% 
+annotate_figure(top = text_grob(x$form_rda, 
+                                size = 16, 
+                                color = 'black', 
+                                face = 'bold'))
+  
+}
+
+
+# Function to plot the RDA models
+# ==============================
+plot_RDA <- function(df,x,GPs){
+  
+  # check the class of x
+  stopifnot("x is not of class myrda" = class(x)=="myrda")
+  
+  if(x$axis_significance %>% as.data.frame() %>% nrow()-1>2) {
+  par(mfrow=c(1,2))
+  rdaplots <-  lapply(2:3, function(second_axis){
+    plot(x$mod_rda, type="n", scaling=3, choices=c(1,second_axis))
+    points(x$mod_rda, display="species", pch=20, cex=0.7, col="gray32", scaling=3, choices=c(1,second_axis))
+    points(x$mod_rda, display="sites", pch=21, cex=1.3, col="gray32", scaling=3, bg=bg[GPs], choices=c(1,second_axis))
+    text(x$mod_rda, scaling=3, display="bp", col="#0868ac", cex=1, choices=c(1,second_axis))
+    if(second_axis==2) legend("topleft", legend=levels(GPs), bty="n", col="gray32", pch=21, cex=1, pt.bg=bg)
+    recordPlot()
+  })} else {
+    par(mfrow=c(1,1))
+    plot(x$mod_rda, type="n", scaling=3, choices=c(1,2))
+    points(x$mod_rda, display="species", pch=20, cex=0.7, col="gray32", scaling=3, choices=c(1,2))
+    points(x$mod_rda, display="sites", pch=21, cex=1.3, col="gray32", scaling=3, bg=bg[GPs], choices=c(1,2))
+    text(x$mod_rda, scaling=3, display="bp", col="#0868ac", cex=1, choices=c(1,2))
+    legend("bottomright", legend=levels(GPs), bty="n", col="gray32", pch=21, cex=1, pt.bg=bg)
+  }
+  
+  title(x$form_rda, line=-3,outer = TRUE)
+}
+```
+
+
+
+```{r RunRDAmodels, eval=F, results="hide"}
+# We store in a list the four combinations of: 
+  # - the two sets of selected climatic variables
+  # - correction or not by population structure
+rda_combinations <- list(
+  list(selected_var = clim_var,
+       pop_structure_correction = FALSE),
+  list(selected_var = clim_var,
+       pop_structure_correction = TRUE))
+
+
+# Run the RDA models and store their information
+rda_models <- lapply(rda_combinations, function(x){
+  runRDA(df = df,
+         geno_pop = geno_pop,
+         selected_var = x$selected_var,
+         pop_structure_correction = x$pop_structure_correction)})
+
+# save the RDA models and their information
+saveRDS(rda_models, here("outputs/RDA/RDAmodels.rds"))
+
+# viz RDA models and their summary information
+pdf(width = 13, height = 6, here("figs/RDA/RDAsummary.pdf"))
+lapply(rda_models, viz_RDAsummary)
+dev.off()
+
+# plot RDA models
+pdf(width = 12, height = 8, here("figs/RDA/RDAplots.pdf"))
+lapply(rda_models, function(x) plot_RDA(df=df,x=x,GPs=GPs))
+dev.off()
+```
+
+```{r LoadRDAmodels}
+rda_models <- readRDS(here("outputs/RDA/RDAmodels.rds"))
+```
+
+
+## Identify outliers
+
+Different methods can be used to identify the outliers with the RDA.
+
+Outliers can be identified based on their *extremeness* along a *distribution of Mahalanobis distances* estimated between each locus and the center of the RDA space using a certain number of axes (K). The Mahalanobis distances are calculated with the `rdadapt` function from @capblancq2021redundancy, which returns $p$-values and $q$-values for each SNP. Different thresholds can then be used to identify the outliers:
+
+  -  @capblancq2020climate uses a $p$-value threshold with a Bonferroni correction to account for multiple testing: $p$-value < 0.01 / number of SNPs (see [code](https://github.com/Capblancq/Local-Adaptation-Fagus-sylvatica)). 
+
+  - @capblancq2021redundancy ([code](https://github.com/Capblancq/RDA-landscape-genomics)) rank-ordered the SNPs based on their $p$-values (the $p$-value of a given SNP captures how far its Mahalanobis distance is from the distribution of Mahalanobis distances of all SNPs) and identified the 0.2% or 0.5% of the SNPs with the lowest $p$-values
+  
+  - we can also use a FDR (False Discovery Rate) threshold of 5% or 10% to identify outliers as the `rdadapt` function returns both $p$-values and $q$-values (see @franccois2016controlling).
+
+Outliers can also been identified based on the *extreme loadings on each retained axis*. Method used in @forester2018comparing (see [code](https://popgen.nescent.org/2018-03-27_RDA_GEA.html), in which a 3 standard deviation cutoff is used (two-tailed $p$-value = 0.0027).
+  
+  
+**In the present document, I left the different ways of identifying the candidate SNPs but in the following analyses, we will only use the candidate SNPs identified based on the Mahalanobis distances and with a FDR threshold of 5%.**
+  
+```{r FunctionToIdentifyOutliers}
+# ====================================
+# Function to identify the outlier SNPs
+# =====================================
+
+identify_outliers <- function(rda_model, explanatory_data, geno_data){
+
+# outlier detection based on  extreme Mahalanobis distances from the RDA center
+# =============================================================================
+
+# Genome scan with K = 2 (degrees of freedom of the X2 distribution)
+  # rdadapt is a function to conduct a RDA based genome scan (from Capblancq & Forester 2021)
+GSout <- rdadapt(rda_model$mod_rda, 2) %>%  
+  as_tibble() %>% 
+  mutate(snp=colnames(geno_data)) 
+
+# P-values threshold after Bonferroni correction
+# outliers_maha <- GSout %>% 
+#   filter(pvalues <  0.01/nrow(.)) %>% 
+#   mutate(maha_meth = TRUE) %>% 
+#   dplyr::select(snp,maha_meth) # we do not keep the p.values and q.values in the outlier table
+
+# FDR threshold of 5%
+outliers_maha <- GSout %>%
+  filter(qvalues <  0.05) %>%
+  mutate(maha_meth = TRUE) %>%
+  dplyr::select(snp,maha_meth) # we do not keep the p.values and q.values in the outlier table
+
+# P-values are rank-ordered and we select the 0.5% with the lowest p-values
+# outliers_maha <- GSout %>% 
+#   arrange(pvalues) %>% 
+#   slice(1:(0.005*nrow(.))) %>% 
+#   mutate(maha_meth = TRUE) %>% 
+#   dplyr::select(snp,maha_meth) # we do not keep the p.values and q.values in the outlier table
+
+
+# outlier detection based on  extreme axis loadings
+# =================================================
+
+# As we identify the SNPs that has loadings along the significant axes,
+# we first extract the number of significant axes 
+nb_signi_axis <- rda_model$axis_significance %>% 
+  as.data.frame() %>% 
+  dplyr::rename(pvalue="Pr(>F)") %>% 
+  dplyr::filter(pvalue<0.05) %>% 
+  nrow()
+  
+loads <- scores(rda_model$mod_rda, choices=c(1:(nrow(as.data.frame(rda_model$axis_significance))-1)), display="species")
+  
+
+outliers_loads <- lapply(1:nb_signi_axis, function(id.axis){
+  out <- detectoutliers(loads[,id.axis],3) # function to identify outliers based on their RDA loadings (from  Forester et al. 2018)
+  tibble(
+    #axis=rep(id.axis,times=length(out)), # we do not keep the information about the axis
+    snp = names(out),
+    load_meth = TRUE,
+    # loading = out # we do not keep the loadings
+  )
+}) %>% 
+  list_rbind() %>% 
+  distinct()
+
+
+
+# Merge outliers identified by the two methods
+# ============================================
+
+all_outliers <- full_join(outliers_maha,outliers_loads, by="snp") %>% 
+  mutate(across(c(maha_meth,load_meth), ~replace_na(.,FALSE)))
+
+all_outliers <- map(all_outliers$snp, function(snp){
+ cordf <-  cor(explanatory_data[,names(rda_model$vif)],geno_data[,snp]) %>% 
+    as.data.frame() %>% 
+    rownames_to_column() %>% 
+    pivot_wider(names_from="rowname", values_from = "V1") %>% 
+     mutate(max_var = names(which.max(abs(.)))) %>% 
+     mutate(max_var_clim = names(which.max(abs(.[,rda_model$selected_var]))))
+}) %>%
+  setNames(all_outliers$snp) %>% 
+  list_rbind(names_to = "snp") %>% 
+  inner_join(all_outliers,by="snp")
+
+
+list(rda_model = rda_model,
+     GSout = GSout, # keep the p.values for the Manhattan plot
+     outliers = all_outliers)
+
+}
+```
+
+```{r IdentifyOutliers}
+# we identify the outlier SNPs for the four RDA models
+rda_outliers <- rda_models %>% 
+  lapply(function(x) {
+    identify_outliers(rda_model = x, explanatory_data = df, geno_data = geno_pop)
+  })
+
+saveRDS(rda_outliers, here("outputs/RDA/RDA_outliers.rds"))
+```
+
+## Outlier visualization
+
+
+### RDA plots based on Forester et al. (2018)
+
+We visualize the outliers with RDA plots following @forester2018comparing (see [code](https://popgen.nescent.org/2018-03-27_RDA_GEA.html)). Figures are stored in `RDAplots_outliers_1.pdf`.
+
+```{r FunctionToPlotRDAoutliers}
+# Function to make one RDA plot with different colors for outlier SNPs
+make_one_outlier_rda_plot <- function(mod_rda, data_plots, xlim, ylim, second_axis,arrow_length,outline_col){
+  
+plot(mod_rda, type="n", scaling=3, xlim=xlim, ylim=ylim, choices=c(1,second_axis))
+points(mod_rda, display="species", pch=21, cex=1, col=data_plots$allsnps$nooutlier_color, bg=data_plots$allsnps$nooutlier_bg , scaling=3, choices=c(1,second_axis))
+points(mod_rda, display="species", pch=21, cex=1, col=data_plots$allsnps$outlier_color, bg=data_plots$allsnps$outlier_bg, scaling=3, choices=c(1,second_axis))
+text(mod_rda, scaling=3, display="bp", col="#0868ac", cex=1, arrow.mul=arrow_length, choices=c(1,second_axis))
+legend("topleft", legend=data_plots$legend_names, bty="n", col=outline_col, pch=21, cex=1, pt.bg=data_plots$legend_colors,ncol=1,title=data_plots$legend_title) 
+recordPlot()
+
+}
+
+
+
+
+# Function that combines two types of plot:
+  # plots in which outliers are colored according to their most associated climatic variable
+  # plots in which outliers are colored according to the detection method used to identify them:
+      # a method based on the Mahalanobis distances from the center of the RDA space
+      # a method based on the extreme SNP loadings on each significant axis
+combine_rda_outlier_plots <- function(rda_out,color_clim_var){
+
+# Storing data and options to generate the plots in a list
+list_data_plots <- list(clim=list(), # options/data specific to plots with colors based on the climatic variables
+                        meth=list()) # options/data specific to plots with colors based on the detection methods
+
+
+# Figure options shared between the two types of plot
+# ===================================================
+
+nooutliers_bg <- '#f1eef6'
+outline_col <- 'gray32'
+transparent_col <- rgb(0,1,0, alpha=0)
+
+
+  
+# Fig options/data specific to plots based on the climatic variables
+# ==================================================================
+
+# Attribute one color to each climatic variable 
+selected_var_colors <- tibble(max_var_clim = names(color_clim_var),
+                              outlier_bg = color_clim_var) %>% 
+  dplyr::filter(max_var_clim %in% rda_out$rda_model$selected_var)
+
+# Generate a dataframe with color information for outliers
+outlier_colors <-  rda_out$outliers %>% 
+  dplyr::select(snp, max_var_clim) %>% 
+  left_join(selected_var_colors, by="max_var_clim")
+ 
+# Generate a dataframe with color information for all SNPs
+list_data_plots$clim$allsnps <- tibble(snp=rownames(rda_out$rda_model$mod_rda$CCA$v)) %>% 
+  left_join(outlier_colors, by="snp") %>% 
+  mutate(outlier_bg = replace_na(outlier_bg,transparent_col),
+         outlier_color = ifelse(outlier_bg == transparent_col, transparent_col, outline_col),
+         nooutlier_bg = ifelse(outlier_bg == transparent_col, nooutliers_bg, transparent_col),
+         nooutlier_color = ifelse(outlier_bg == transparent_col, outline_col, transparent_col))
+
+# Legend options
+list_data_plots$clim$legend_title <- 'Climatic variable'
+list_data_plots$clim$legend_names <- selected_var_colors$max_var_clim
+list_data_plots$clim$legend_colors <- selected_var_colors$outlier_bg
+
+  
+# Fig options/data specific to plots based on the detection methods
+# =================================================================
+
+# Attribute one color to each method
+method_colors <- c('#FCF926','#3BCD24','#CD24B2') %>% setNames(c("Mahalanobis distance","Axis loadings", "Both"))
+
+# Legend options
+list_data_plots$meth$legend_colors <- method_colors
+list_data_plots$meth$legend_names <- names(method_colors)
+list_data_plots$meth$legend_title <- 'Outlier detection method'
+
+
+# attribute colors to all SNPs
+list_data_plots$meth$allsnps <-  tibble(snp=rownames(rda_out$rda_model$mod_rda$CCA$v)) %>% 
+  left_join(rda_out$outliers[,c("snp", "load_meth", "maha_meth")],by="snp") %>%  
+  mutate(outlier_bg = case_when(load_meth == TRUE & maha_meth == TRUE ~ method_colors["Both"],
+                                load_meth == TRUE & maha_meth == FALSE ~ method_colors["Axis loadings"],
+                                load_meth == FALSE & maha_meth == TRUE ~ method_colors["Mahalanobis distance"],
+                                is.na(load_meth) & is.na(maha_meth) ~ transparent_col),
+         outlier_color = ifelse(outlier_bg == transparent_col, transparent_col, outline_col),
+         nooutlier_bg = ifelse(outlier_bg == transparent_col, nooutliers_bg, transparent_col),
+         nooutlier_color = ifelse(outlier_bg == transparent_col, outline_col, transparent_col))
+
+
+# Generate the RDA plots
+# =====================
+
+# For RDA models with 2 explanatory variables, we can only plot RDA1 vs RDA2
+
+if(rda_out$rda_model$axis_significance %>% as.data.frame() %>% nrow()-1>2) { # rda models with more than 2 climatic variables
+    
+par(mfrow=c(2,2))
+lapply(2:3, function(second_axis){ # generate two plots: RDA1 vs RDA2 and RDA1 vs RDA3
+    lapply(list_data_plots, function(x) make_one_outlier_rda_plot(mod_rda = rda_out$rda_model$mod_rda,
+                                                                  data_plots = x,
+                                                                  xlim=c(-1,1), 
+                                                                  ylim=c(-0.5,0.5),
+                                                                  arrow_length=1.25,
+                                                                  outline_col=outline_col,
+                                                                  second_axis=second_axis))
+
+  })} else {  # rda models with 2 climatic variables
+
+par(mfrow=c(1,2))
+    lapply(list_data_plots, function(x) make_one_outlier_rda_plot(mod_rda = rda_out$rda_model$mod_rda,
+                                                                  data_plots = x,
+                                                                  xlim=c(-0.3,0.3), 
+                                                                  ylim=c(-0.5,0.5),
+                                                                  outline_col=outline_col,
+                                                                  arrow_length=0.6,
+                                                                  second_axis=2))
+    
+  }
+
+  title(rda_out$rda_model$form_rda, line=-3,outer = TRUE) # rda model formula as title
+   
+}
+```
+
+
+
+```{r PlotRDAoutliers, results='hide'}
+# Plot RDA outliers with different colors based either on the detection method or the most associated climatic variable
+pdf(width = 12, height = 8, here("figs/RDA/RDAplots_outliers_1.pdf"))
+lapply(rda_outliers, function(x) combine_rda_outlier_plots(rda_out = x,color_clim_var = color_clim_var))
+dev.off()
+```
+
+
+### RDA plots based on Capblancq and Forester (2021)
+
+
+We visualize the outliers with RDA and Manhattan plots following @capblancq2021redundancy ([code](https://github.com/Capblancq/RDA-landscape-genomics)). Figures are stored in `RDAplots_outliers_2.pdf`.
+
+
+```{r FunctionToGGPlotRDAoutliers}
+make_rda_ggplot <- function(data_plots,TAB_var){ 
+
+  data_plots$tab[order(data_plots$tab$snp_type),] %>% 
+  ggplot() +
+  geom_hline(yintercept=0, linetype="dashed", color = gray(.80), linewidth=0.6) +
+  geom_vline(xintercept=0, linetype="dashed", color = gray(.80), linewidth=0.6) +
+  geom_point(aes(x=RDA1*20, y=RDA2*20, colour = snp_type), size = 1.4) +
+  scale_color_manual(values = data_plots$legend_colors) +
+  geom_segment(data = TAB_var, aes(xend=RDA1, yend=RDA2, x=0, y=0), 
+               colour="black", linewidth=0.15, linetype=1, arrow=arrow(length = unit(0.02, "npc"))) +
+  geom_text(data = TAB_var, aes(x=1.1*RDA1, y=1.1*RDA2, label = row.names(TAB_var)), size = 2.5) +
+  xlab("RDA 1") + ylab("RDA 2") +
+  facet_wrap(~"RDA space") +
+  guides(color=guide_legend(title=data_plots$legend_title)) +
+  theme_bw(base_size = 11) +
+  theme(panel.background = element_blank(), 
+        legend.background = element_blank(), 
+        panel.grid = element_blank(), 
+        plot.background = element_blank(), 
+        legend.text=element_text(size=rel(.8)), 
+        strip.text = element_text(size=11))
+  
+  
+  
+}
+
+make_manhattan_plot <- function(data_plots){ 
+
+data_plots$tab[order(data_plots$tab$snp_type),] %>% 
+ggplot() +
+  geom_hline(yintercept=-log10(0.01/length(data_plots$tab$pvalues)), linetype="dashed", color = gray(.80), linewidth=0.6) +
+  geom_point(aes(x=pos, y=-log10(pvalues), col = snp_type), size=1.4) +
+  scale_color_manual(values = data_plots$legend_colors) +
+  xlab("Loci") + ylab("-log10(p-values)") +
+  facet_wrap(~"Manhattan plot", nrow = 3) +
+  guides(color=guide_legend(title=data_plots$legend_title)) +
+  theme_bw(base_size = 11) +
+  theme(legend.position="right", legend.background = element_blank(), panel.grid = element_blank(), legend.box.background = element_blank(), plot.background = element_blank(), panel.background = element_blank(), legend.text=element_text(size=rel(.8)), strip.text = element_text(size=11))
+  }
+
+
+# Function that combines two types of plot:
+  # plots in which outliers are colored according to their most associated climatic variable
+  # plots in which outliers are colored according to the detection method used to identify them:
+      # a method based on the Mahalanobis distances from the center of the RDA space
+      # a method based on the extreme SNP loadings on each significant axis
+combine_rda_outlier_ggplots <- function(rda_out,color_clim_var){
+
+# Storing data and options to generate the plots in a list
+list_data_plots <- list(clim=list(), # options/data specific to plots with colors based on the climatic variables
+                        meth=list()) # options/data specific to plots with colors based on the detection methods
+
+
+# Figure options shared between the two types of plot
+# ===================================================
+
+nooutliers_bg <- "gray90"
+nooutliers_legend <- "No detection"
+
+locus_scores <- scores(rda_out$rda_model$mod_rda, choices=c(1:2), 
+                       display="species", # 'species' in the vegan package correspond to the loci
+                       scaling="none") %>% 
+  as.data.frame() %>% 
+  rownames_to_column("snp") %>% 
+  as_tibble() %>% 
+  inner_join(rda_out$GSout, by="snp") %>% 
+  mutate(pos=seq(1:nrow(.)))
+
+TAB_var <- as.data.frame(scores(rda_out$rda_model$mod_rda, choices=c(1,2), display="bp"))
+  
+# Fig options/data specific to plots based on the climatic variables
+# ==================================================================
+
+# Legend options
+vec_color_clim_var <- color_clim_var[names(color_clim_var) %in% unique(rda_out$outliers$max_var_clim)]
+list_data_plots$clim$legend_title <- 'Climatic variable'
+list_data_plots$clim$legend_names <- c(nooutliers_legend,names(vec_color_clim_var))
+list_data_plots$clim$legend_colors <- c(nooutliers_bg,vec_color_clim_var) %>% unname()
+
+
+list_data_plots$clim$tab <-  locus_scores %>% 
+  left_join(rda_out$outliers[,c("snp", "max_var_clim")],by="snp") %>%  
+  mutate(max_var_clim = replace_na(max_var_clim,nooutliers_legend)) %>% 
+  mutate(max_var_clim =factor(max_var_clim,levels=list_data_plots$clim$legend_names)) %>% 
+  dplyr::rename(snp_type = max_var_clim)
+
+
+# Fig options/data specific to plots based on the detection methods
+# =================================================================
+
+
+# Legend options
+list_data_plots$meth$legend_colors <- c(nooutliers_bg,'#FCF926','#3BCD24','#CD24B2')
+list_data_plots$meth$legend_names <- c(nooutliers_legend,"Mahalanobis distance","Axis loadings", "Both")
+list_data_plots$meth$legend_title <- 'Outlier detection'
+
+
+list_data_plots$meth$tab <-   locus_scores %>% 
+  left_join(rda_out$outliers[,c("snp", "load_meth", "maha_meth")],by="snp") %>%  
+  mutate(snp_type = case_when(load_meth == TRUE & maha_meth == TRUE ~  list_data_plots$meth$legend_names[[4]],
+                              load_meth == TRUE & maha_meth == FALSE ~ list_data_plots$meth$legend_names[[3]],
+                              load_meth == FALSE & maha_meth == TRUE ~ list_data_plots$meth$legend_names[[2]],
+                              is.na(load_meth) & is.na(maha_meth) ~ list_data_plots$meth$legend_names[[1]])) %>% 
+  mutate(snp_type=factor(snp_type,levels=list_data_plots$meth$legend_names)) 
+
+
+
+# Generate the RDA plots
+# =====================
+
+
+p1 <- lapply(list_data_plots, function(x) make_rda_ggplot(data_plots = x,
+                                                         TAB_var=TAB_var))
+
+p2 <- lapply(list_data_plots, function(x) make_manhattan_plot(data_plots = x))
+
+plot_row <- plot_grid(p1$clim, p1$meth,p2$clim,p2$meth, ncol=2)
+
+# Title options
+title <- ggdraw() + 
+  draw_label(
+    rda_out$rda_model$form_rda,
+    fontface = 'bold',
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    # add margin on the left of the drawing canvas,
+    # so title is aligned with left edge of first plot
+    plot.margin = margin(0, 0, 0, 7)
+  )
+
+# merge title and plots
+plot_grid(
+  title, plot_row,
+  ncol = 1,
+  # rel_heights values control vertical title margins
+  rel_heights = c(0.1, 1)
+)
+
+   
+}
+```
+
+```{r GGPlotRDAoutliers, results='hide'}
+# Plot RDA outliers with different colors based either on the detection method or the most associated climatic variable
+pdf(width = 12, height = 8, here("figs/RDA/RDAplots_outliers_2.pdf"))
+lapply(rda_outliers, function(x) combine_rda_outlier_ggplots(rda_out = x, color_clim_var=color_clim_var))
+dev.off()
+```
+
+
+**Comments:**
+
+For RDA not corrected for population structure, in the RDA plots with RDA1 in the x-axis and RDA2 in the y-axis, some outlier SNPs identified with the SNP loadings are the middle of the cloud of SNPs. This is due to the `r rda_models[[1]]$axis_significance %>% as.data.frame() %>% dplyr::rename(pvalue="Pr(>F)") %>% dplyr::filter(pvalue<0.05) %>% nrow()` significant axes in this model. Indeed, in this model, most outlier SNPs were identified based on the third axis and that's why they show up in the middle of the SNP cloud when we plot them along the first two axes of the RDA. 
+
+This is not the case for the RDA model corrected for population structure as there were only `r rda_models[[2]]$axis_significance %>% as.data.frame() %>% dplyr::rename(pvalue="Pr(>F)") %>% dplyr::filter(pvalue<0.05) %>% nrow()` significant axes in this model.
+
+**Note that for the following analyses, we will only use the candidate SNPs identified with the Mahalanobis distances and with a FDR threshold of 5% (so the SNPs that show up in the middle of the cloud will not be selected).**
+
+
+
