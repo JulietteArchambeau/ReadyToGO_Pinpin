@@ -17,3 +17,19 @@
 
 
 -   [IdentificationCandidateSNPs_LFMM.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/IdentificationCandidateSNPs_LFMM.html) Identifying candidate SNPs with latent factor mixed models (LFMM).
+
+-   [IdentificationCandidateSNPs_RDA.html](https://juliettearchambeau.github.io/GOPredEvalPinpin/IdentificationCandidateSNPs_RDA.html) Variance partitioning and identification of the candidate SNPs using Redundancy analysis (RDA) (approach developed in [Capblancq et al. 2018](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.12906) and [Capblancq and Forester 2021](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13722)).
+    
+    *  <a href="https://juliettearchambeau.github.io/ReadyToGO_Pinpin/PCAplot.pdf" target="_blank">PCAplot.pdf</a> Principal component analysis performed on the population allele frequencies. The first three axes of the PCA are used to account for the population structure in the RDA analysis.
+ 
+    *  <a href="https://juliettearchambeau.github.io/ReadyToGO_Pinpin/RDAsummary.pdf" target="_blank">RDAsummary.pdf</a> Summary statistics of the RDA models.
+    
+    *  <a href="https://juliettearchambeau.github.io/ReadyToGO_Pinpin/RDAplots.pdf" target="_blank">RDAplots.pdf</a> RDA plots with population colored based on the main gene pool they belong to.
+    
+    *  <a href="https://juliettearchambeau.github.io/ReadyToGO_Pinpin/RDAplots_outliers_1.pdf" target="_blank">RDAplots_outliers_1.pdf</a> RDA plots with outliers following [Forester et al. (2018)](https://onlinelibrary.wiley.com/doi/full/10.1111/mec.14584?casa_token=IOrVgFSER0gAAAAA%3AsOlFDnBLnWtTdC-R6vi5pZiRwuzpP4GQyr8H9hVpVqxW0_3RXOV6bznLQx9deVCrYv80LokfqFvaGeY) (and the [associated vignette](https://popgen.nescent.org/2018-03-27_RDA_GEA.html)).
+    
+    *  <a href="https://juliettearchambeau.github.io/ReadyToGO_Pinpin/RDAplots_outliers_2.pdf" target="_blank">RDAplots_outliers_2.pdf</a> RDA plots with outliers and Manhattan plots following [Capblancq and Forester (2021)](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13722) (and the [associated Github repository](https://github.com/Capblancq/RDA-landscape-genomics)).
+    
+-   [IdentificationCandidateSNPs_GF.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/IdentificationCandidateSNPs_GF.html) Identifying candidate SNPs with Gradient Forest (GF).
+
+-   [GeneratingSetCandidateSNPs.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/GeneratingSetCandidateSNPs.html) Identifying the common candidates across the different gene-environment association (GEA) methods and checking their genomic position. Selecting a set candidate SNPs that will be used to estimate the genomic offset.
