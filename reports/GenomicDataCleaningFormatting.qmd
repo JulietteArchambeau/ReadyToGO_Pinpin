@@ -531,4 +531,96 @@ list_geno$list_withoutmaf$df[1:10,1:8]  %>%
   kable_mydf(boldfirstcolumn = F, font_size = 11)
 ```
 
+# Main gene pool of each individual and population
+
+For further analyses, it will be useful to have a dataset with the main gene pool of each individual and population, which we do below.
+
+
+```{r LoadMainGPClone}
+# Incorporating gene pool information
+# -----------------------------------
+genotypes <- read_csv(here("data/genomic_data/filtered_allele_counts_withmaf.csv"), show_col_types = FALSE) %>% 
+  dplyr::select(-snp) %>% 
+  colnames() 
+
+gps <- gp %>% 
+  dplyr::rename(main_gp_ind_code = K_main) %>% 
+  mutate(Population = str_sub(Individual,1,3),
+         main_gp_ind = case_when(main_gp_ind_code == "K1" ~ "Central Spain",
+                                 main_gp_ind_code == "K2" ~ "Corsica",
+                                 main_gp_ind_code == "K3" ~ "Morocco",
+                                 main_gp_ind_code == "K4" ~ "Atlantic France",
+                                 main_gp_ind_code == "K5" ~ "Atlantic Iberian Peninsula",
+                                 main_gp_ind_code == "K6" ~ "Tunisia-Pantelleria",
+                                 main_gp_ind_code == "K7" ~ "Southeastern Spain",
+                                 main_gp_ind_code == "K8" ~ "Fuencaliente",
+                                 main_gp_ind_code == "K9" ~ "North-east",
+                                 main_gp_ind_code == "K10" ~ "Point-Cires"),
+         main_gp_ind_color = case_when(main_gp_ind_code == "K1" ~ "#ffc100",
+                                       main_gp_ind_code == "K2" ~ "#07ae00",
+                                       main_gp_ind_code == "K3" ~ "#ffec18",
+                                       main_gp_ind_code == "K4" ~ "#bd08dd",
+                                       main_gp_ind_code == "K5" ~ "#fa0000",
+                                       main_gp_ind_code == "K6" ~ "#ff009d",
+                                       main_gp_ind_code == "K7" ~ "#31f36d",
+                                       main_gp_ind_code == "K8" ~ "#15d8ef",
+                                       main_gp_ind_code == "K9" ~ "#ffa89d",
+                                       main_gp_ind_code == "K10" ~ "#3311da")) %>% 
+  dplyr::select(Population, Individual, everything(), -K_max) %>% 
+  dplyr::filter(Individual %in% genotypes)
+  
+
+gps_list <- gps %>% 
+  group_by(Population) %>% 
+  group_split() %>% 
+  setNames(unique(gps$Population))
+```
+
+We identify the populations for which the main gene pool is not the same for all genotypes:
+
+```{r IdentifyPopsWithDifferentMainGPclonLevel}
+gps_list %>% 
+  map_dfr(\(x) {
+    data.frame(Populations = unique(x$Population),
+               main_gp_number = x$main_gp_ind_code %>% unique() %>% length())
+  }) %>% 
+  group_by(main_gp_number) %>% 
+  group_split()  %>% 
+  map_dfr(\(x) {
+    data.frame(Populations = paste0(x$Populations, collapse =", "),
+               main_gp_number = unique(x$main_gp_number))
+  }) %>% 
+  kable_mydf(boldfirstcolumn = F)
+```
+
+Some populations have some individuals that belong to different gene pools so we have to account for these individuals when we generate a dataset with the main gene pool of each population.
+
+
+```{r ExtractMainGPpop}
+# Extracting the main gene pool of each population
+gp_poplevel <- gps_list %>% 
+  modify(\(x) mutate(x, main_gp_pop= x$main_gp_ind  %>% table() %>% which.max() %>% names())) %>% 
+  list_rbind() %>% 
+  dplyr::select(Population, main_gp_pop) %>% 
+  distinct()
+  
+# Information of the main gene pool for each pop
+gp_poplevel <- gps %>% 
+  dplyr::select(main_gp_ind,main_gp_ind_color) %>% 
+  distinct() %>% 
+  dplyr::rename(main_gp_pop=main_gp_ind,
+                main_gp_pop_color=main_gp_ind_color) %>% 
+  right_join(gp_poplevel,by="main_gp_pop") 
+
+# Information of the main gene pool for each clone
+gps <- gp_poplevel %>% 
+  right_join(gps, by="Population") %>% 
+  arrange(Individual) # The clone order has to be the same as in the genomic data
+
+
+list(pop_level=gp_poplevel,
+     ind_level=gps) %>% 
+saveRDS(here("data/genomic_data/main_gp_info.rds"))
+```
+
 
