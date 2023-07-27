@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Juliette Archambeau &amp; Adélaïde Theraroz">
-<meta name="dcterms.date" content="2023-06-15">
+<meta name="dcterms.date" content="2023-07-27">
 
 <title>Gradient Forest (GF)</title>
 <style>
@@ -2896,7 +2896,7 @@ border: 0;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 15, 2023</p>
+      <p class="date">July 27, 2023</p>
     </div>
   </div>
     
@@ -3006,20 +3006,23 @@ font-size: 10px
 <span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>      locus <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(genodata[,k])</span>
 <span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>      <span class="fu">names</span>(locus) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(genodata)[k]</span>
 <span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>      gf_mod <span class="ot">&lt;-</span> <span class="fu">gradientForest</span>(<span class="fu">data.frame</span>(climdata[, clim_var], locus), </span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>                               <span class="at">predictor.vars=</span>clim_var, <span class="at">response.vars=</span><span class="fu">colnames</span>(genodata)[k], </span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>                               <span class="at">corr.threshold=</span><span class="fl">0.5</span>, <span class="at">ntree=</span>ntree, <span class="at">trace=</span>F)</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span>(<span class="sc">!</span><span class="fu">is.null</span>(gf_mod)){<span class="fu">data.frame</span>(<span class="at">variable=</span><span class="fu">names</span>(<span class="fu">importance</span>(gf_mod)),</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">impts =</span> <span class="fu">importance</span>(gf_mod), </span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">snp =</span> <span class="fu">colnames</span>(genodata)[k])}</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stopCluster</span>(cl)</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>                               <span class="at">predictor.vars=</span>clim_var, </span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>                               <span class="at">response.vars=</span><span class="fu">colnames</span>(genodata)[k], </span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>                               <span class="at">corr.threshold=</span><span class="fl">0.5</span>, </span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>                               <span class="at">ntree=</span>ntree, </span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>                               <span class="at">trace=</span>F)</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span>(<span class="sc">!</span><span class="fu">is.null</span>(gf_mod)){<span class="fu">data.frame</span>(<span class="at">variable=</span><span class="fu">names</span>(<span class="fu">importance</span>(gf_mod)),</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">impts =</span> <span class="fu">importance</span>(gf_mod), </span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">snp =</span> <span class="fu">colnames</span>(genodata)[k])}</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">gf_output_obj</span>(<span class="at">gf_data =</span> <span class="fu">data.frame</span>(genodata), <span class="at">gf_impts =</span> gf_impts))</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>  }</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stopCluster</span>(cl)</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">gf_output_obj</span>(<span class="at">gf_data =</span> <span class="fu">data.frame</span>(genodata), <span class="at">gf_impts =</span> gf_impts))</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>  }</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -3249,6 +3252,7 @@ font-size: 10px
 
 </div>
 </div>
+<p><strong><span style="color: orange;">Warning:</span></strong> The function <code>read.csv</code> changes the column names to valid R column names, by replacing ‘-’ to ‘.’ (e.g. ‘Affx-979041050’ to ‘Affx.979041050’). We run GF functions with valid R column names because the functions do not work if we use SNP names with ‘-’. So, to get the correct names of the candidate SNPs, we will then have to replace ‘.’ by ‘-’.</p>
 <p><strong>Comment:</strong> This data contains the population-based allele frequencies of the <strong>minor allele</strong>. The minor allele was identified as the minor allele across all individuals. However, as the populations do not contain the same number of individuals, the average of the population-based allele frequencies is higher than 0.5 for some SNPs.</p>
 <div class="cell">
 <details>
@@ -3303,7 +3307,7 @@ font-size: 10px
 <p>Different possible thresholds to identify the candidate SNPs:</p>
 <ul>
 <li><p><span class="math inline">\(p\)</span>-value threshold: <span class="math inline">\(p\)</span>-value &lt; 0.005 or <span class="math inline">\(p\)</span>-value &lt; 0.001.</p></li>
-<li><p>rank-based threshold. e.g. the 0.2% or 0.5% of the SNPs with the lowest p-values (i.e. 19 or 49 SNPs in our study). As done in <span class="citation" data-cites="capblancq2023common">Capblancq et al. (<a href="#ref-capblancq2023common" role="doc-biblioref">2023</a>)</span> and <span class="citation" data-cites="fitzpatrick2021experimental">Fitzpatrick et al. (<a href="#ref-fitzpatrick2021experimental" role="doc-biblioref">2021</a>)</span>.</p></li>
+<li><p>rank-based threshold. e.g. the 0.2% or 0.5% of the SNPs with the lowest p-values. As done in <span class="citation" data-cites="capblancq2023common">Capblancq et al. (<a href="#ref-capblancq2023common" role="doc-biblioref">2023</a>)</span> and <span class="citation" data-cites="fitzpatrick2021experimental">Fitzpatrick et al. (<a href="#ref-fitzpatrick2021experimental" role="doc-biblioref">2021</a>)</span>.</p></li>
 <li><p>Bonferroni threshold.</p></li>
 </ul>
 <div class="cell">
@@ -3337,9 +3341,10 @@ font-size: 10px
 <span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>                    <span class="at">outliers_pv01 =</span> outliers_pv01,</span>
 <span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>                    <span class="at">outliers_rank002 =</span> outliers_rank002,</span>
 <span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>                    <span class="at">outliers_rank005 =</span> outliers_rank005,</span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>                    <span class="at">outliers_bonf =</span> outliers_bonf)</span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(gf_outliers, <span class="fu">here</span>(<span class="st">&quot;outputs/GF/gf_outliers.rds&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>                    <span class="at">outliers_bonf =</span> outliers_bonf) <span class="sc">%&gt;%</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(<span class="cf">function</span>(x) <span class="fu">str_replace</span>(x,<span class="st">&quot;[.]&quot;</span>,<span class="st">&quot;-&quot;</span>)) <span class="co"># we re-attribute to the SNPs their original names (i.e. with &#39;-&#39; instead of &#39;.&#39;) </span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(gf_outliers, <span class="fu">here</span>(<span class="st">&quot;outputs/GF/gf_outliers.rds&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 
