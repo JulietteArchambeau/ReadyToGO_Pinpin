@@ -118,8 +118,8 @@ df <- read.csv(here("data/selected_populations_GOanalyses.csv")) %>%
 ```{r LoadGenomicData}
 # Population-based allele frequencies
 # ===================================
-geno_pop <- read.csv(here("data/genomic_data/imputed_allele_frequencies_withoutmaf.csv"),
-                          row.names = 1)
+geno_pop <- read_csv(here("data/genomic_data/imputed_allele_frequencies_withoutmaf.csv")) %>% 
+  column_to_rownames("pop")
 
 kable_mydf(geno_pop[1:10,1:10] %>% round(3), boldfirstcolumn = T)
 ```
@@ -136,10 +136,10 @@ As advised in @capblancq2021redundancy, the estimation of the population genetic
 
 
 ```{r LoadImtGenDataMAF}
-geno_pop_maf <- read.csv(here("data/genomic_data/imputed_allele_frequencies_withmaf.csv"),
-                          row.names = 1)
+geno_pop_maf <- read_csv(here("data/genomic_data/imputed_allele_frequencies_withmaf.csv")) %>% 
+  column_to_rownames("pop")
 
-kable_mydf(geno_pop_maf[1:10,1:8], boldfirstcolumn = F)
+kable_mydf(geno_pop_maf[1:10,1:8], boldfirstcolumn = T)
 ```
 
 We run the PCA with the `rda` function of the `vegan` package, which performs a PCA when no predictor is included.
@@ -549,7 +549,7 @@ plot_RDA <- function(df,x,GPs){
 
 
 
-```{r RunRDAmodels, eval=F, results="hide"}
+```{r RunRDAmodels, eval=T, results="hide"}
 # We store in a list the four combinations of: 
   # - the two sets of selected climatic variables
   # - correction or not by population structure

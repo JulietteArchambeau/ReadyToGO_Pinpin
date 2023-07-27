@@ -131,18 +131,17 @@ list_candidates$"LFMM" <- readRDS(here::here("outputs/LFMM/candidates.rds"))
 ## BayPass
 
 
-```{r BayPassOutliers, eval=F}
+```{r BayPassOutliers}
 list_candidates$"BayPass" <- readRDS(here("outputs/BayPass/baypass_outliers.rds"))
 ```
 
-<!-- <span style="color: OrangeRed;">`r length(list_candidates$BayPass)` candidate SNPs</span> were identified with <span style="font-variant:small-caps;">BayPass</span>. SNPs were considered as outliers in BayPass when their Bayes factors were higher than 10. -->
+<span style="color: OrangeRed;">`r length(list_candidates$BayPass)` candidate SNPs</span> were identified with <span style="font-variant:small-caps;">BayPass</span>. SNPs were considered as outliers in BayPass when their Bayes factors were higher than 10.
 
 
 
 # Common candidate SNPs
 
 Let's look at the common candidates across the different GEA methods. 
-
 
 ```{r VennDiagramCommoncandidates,fig.height=5,fig.width=8}
 # generating the Venn diagrams showing common candidates across GEA methods
@@ -151,6 +150,69 @@ make_venndiagram(list_candidates[c("RDA","GF")],
 make_venndiagram(list_candidates[c("pRDA","LFMM","BayPass")],
                  caption = "GEA methods correcting for population structure",label="count")
 make_venndiagram(list_candidates[c("RDA","GF","pRDA","LFMM","BayPass")],
-                 caption = "All GEA methods",label="count")
+                 caption = "All GEA methods", label="count")
 ```
 
+```{r CommonSNPs}
+common_snps <- list_candidates %>% unlist() %>% .[duplicated(.)] %>% unique()
+```
+
+<span style="color: red;">We select the SNPs identified by at least two methods, which corresponds to `r common_snps %>% length()` SNPs.</span>
+
+
+# Genome position of candidate SNPs
+
+```{r LoadGenomePositionData}
+snppos <- read_excel(here("data/genomic_data/genome_position.xlsx"), sheet = "base_table") %>% 
+  dplyr::rename(snp_ID = Juliette_snp_ID,
+                original_ID = Original_ID,
+                affx_ID = affy_snp_id,
+                infinium_ID = Infinium_ID,
+                genome_position =`position (bp)`,
+                annotation =`Annotation (including alternative names)`) %>% 
+  dplyr::select(snp_ID, original_ID, affx_ID, infinium_ID, scaffold, genome_position, annotation)
+```
+
+Information on genome position for the candidates SNPs:
+
+```{r GenomePositionCandidates}
+snppos %>% 
+  dplyr::filter(affx_ID %in% common_snps) %>% 
+  kable_mydf(boldfirstcolumn = F, font_size = 11)
+```
+
+SNPs on the same scaffold:
+
+```{r SNPsSameScaffold}
+snppos %>% 
+  dplyr::filter(affx_ID %in% common_snps) %>% 
+  group_by(scaffold) %>% 
+  filter(n()>1) %>% 
+  kable_mydf(boldfirstcolumn = F, font_size = 11)
+```
+
+**Comment:** a scaffold is a set of contigs separated by gaps and for which the relative orientation and distance is known.
+
+  
+When some SNPs are on the same scaffold, we remove the SNPs with higher $p$-values in the RDA.
+
+```{r rmSNPsSameGenomePosition}
+snp_to_remove <-  snppos %>% 
+  dplyr::filter(affx_ID %in% common_snps) %>% 
+  group_by(scaffold) %>% 
+  filter(n()>1) %>% 
+  group_split() %>% 
+  lapply(function(x){
+
+rda_outliers[[1]]$GSout %>% 
+   filter(snp %in% x$affx_ID) %>% 
+   arrange(pvalues) %>%  
+   slice(2:nrow(x)) %>% 
+   pull(snp)
+      }) %>%  
+  unlist
+
+common_snps <- setdiff(common_snps, snp_to_remove)
+```
+
+<span style="color: red;">After keeping only one candidate SNPs per scaffold, we get `r length(common_snps)` candidate SNPs.</span>

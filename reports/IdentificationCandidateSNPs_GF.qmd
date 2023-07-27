@@ -152,8 +152,11 @@ run_gf_ind <- function(genodata, climdata, clim_var, ntree, cores){
       locus <- data.frame(genodata[,k])
       names(locus) <- colnames(genodata)[k]
       gf_mod <- gradientForest(data.frame(climdata[, clim_var], locus), 
-                               predictor.vars=clim_var, response.vars=colnames(genodata)[k], 
-                               corr.threshold=0.5, ntree=ntree, trace=F)
+                               predictor.vars=clim_var, 
+                               response.vars=colnames(genodata)[k], 
+                               corr.threshold=0.5, 
+                               ntree=ntree, 
+                               trace=F)
 
       if(!is.null(gf_mod)){data.frame(variable=names(importance(gf_mod)),
                                       impts = importance(gf_mod), 
@@ -288,6 +291,7 @@ geno <- read.csv(here("data/genomic_data/imputed_allele_frequencies_withoutmaf.c
 geno[1:10,1:6] %>% kable_mydf()
 ```
 
+**<span style="color: orange;">Warning:</span>** The function `read.csv` changes the column names to valid R column names, by replacing '-' to '.' (e.g. 'Affx-979041050' to 'Affx.979041050'). We run GF functions with valid R column names because the functions do not work if we use SNP names with '-'. So, to get the correct names of the candidate SNPs, we will then have to replace '.' by '-'.
 
 **Comment:** This data contains the population-based allele frequencies of the **minor allele**. The minor allele was identified as the minor allele across all individuals. However, as the populations do not contain the same number of individuals, the average of the population-based allele frequencies is higher than 0.5 for some SNPs.
 
@@ -319,7 +323,7 @@ clim_ref <- readRDS(here("data/climatic_data/reference_climate_population_locati
 # Run GF models and calculate p-values
 
 
-```{r RunGFModels, eval=F}
+```{r RunGFModels, eval=T}
 gf_out <- identify_GFoutliers(genodata = geno,
                               climdata = clim_ref,
                               clim_var = clim_var,
@@ -340,7 +344,7 @@ Different possible thresholds to identify the candidate SNPs:
 
   - $p$-value threshold: $p$-value < 0.005 or $p$-value < 0.001.
   
-  - rank-based threshold. e.g. the 0.2% or 0.5% of the SNPs with the lowest p-values (i.e. 19 or 49 SNPs in our study). As done in @capblancq2023common and @fitzpatrick2021experimental.
+  - rank-based threshold. e.g. the 0.2% or 0.5% of the SNPs with the lowest p-values. As done in @capblancq2023common and @fitzpatrick2021experimental.
   
   - Bonferroni threshold.
   
@@ -373,7 +377,8 @@ gf_outliers <- list(outliers_pv05 = outliers_pv05,
                     outliers_pv01 = outliers_pv01,
                     outliers_rank002 = outliers_rank002,
                     outliers_rank005 = outliers_rank005,
-                    outliers_bonf = outliers_bonf)
+                    outliers_bonf = outliers_bonf) %>%
+  lapply(function(x) str_replace(x,"[.]","-")) # we re-attribute to the SNPs their original names (i.e. with '-' instead of '.') 
 
 saveRDS(gf_outliers, here("outputs/GF/gf_outliers.rds"))
 ```

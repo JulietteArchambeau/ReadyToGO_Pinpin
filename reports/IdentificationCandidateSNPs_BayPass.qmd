@@ -182,7 +182,7 @@ We estimate the (scaled) covariance matrix of population allele frequencies $\Om
 
 We visualize the matrix.
 
-```{r VisualizeOmega, fig.height=8,fig.width=10, eval=F}
+```{r VisualizeOmega, fig.height=7,fig.width=7, eval=T, results="hide"}
 # Upload the estimated Omega matrix
 omega <- as.matrix(read.table(here("data/baypass/outputs/anacore_mat_omega.out")))
 pop_names <- clim_ref$pop
@@ -194,8 +194,8 @@ plot.omega(omega=omega,pop.names=pop_names)
 
 # as a correlation plot
 cor_mat=cov2cor(omega)
-corrplot(cor_mat,method="color",mar=c(2,1,2,2)+0.1,
-main=expression("Correlation map based on"~hat(Omega)))
+# corrplot(cor_mat,method="color",mar=c(2,1,2,2)+0.1,
+# main=expression("Correlation map based on"~hat(Omega)))
 
 # as a heatmap and hierarchical clustering tree (using the average agglomeration method)
 hclust_ave <- function(x) hclust(x, method="average")
@@ -248,7 +248,7 @@ cd ..
 done
 ```
 
-```{r ExtractSummaryOutputs, eval=F}
+```{r ExtractSummaryOutputs, eval=T}
 # Number of iterations
 nb_iter <- 5
 
@@ -305,6 +305,76 @@ list(snp_out = out,
      cor_beta = cor(beta),
      cor_eBP = cor(eBP))
 }) %>% setNames(clim_var)
+```
+
+
+
+## Checking convergence across runs
+
+We can check the convergence across the **5 independent runs** (different `-seed` options) for each climatic variable and for the empirical p-values (`eBP`), the Bayes Factor (`BF`) and the regression coefficients (`beta`).
+
+```{r Corrplots, fig.height=5,fig.width=14, results="hide"}
+par(mfrow=c(1,3))
+
+lapply(clim_var, function(var){
+  
+  lapply(c("BF","beta","eBP"), function(x){
+    
+list_out[[var]][[paste0("cor_",x)]] %>% corrplot(method = 'number',
+                                                 type = 'lower', 
+                                                 diag = FALSE,
+                                                 title=paste0(var," - ",x),
+                                                 mar=c(0,0,2,0),
+                                                 number.cex=2,
+                                                 tl.cex=1.5)
+  })
+})
+```
+
+
+## Identify and export candidate SNPs
+
+Number of candidate SNPs identified using different thresholds ($BF > 5$, $BF > 10$,$BF > 20$ or $eBP > 3$) for each climatic variable:
+
+```{r NumberCandidates}
+list_out %>% lapply(function(out)out$BF_out) %>%  
+  reduce(left_join, by = "BF_threshold") %>% 
+  kable_mydf()
+
+list_out %>% lapply(function(out)out$eBP_out) %>%  
+  reduce(left_join, by = "eBP_threshold") %>% 
+  kable_mydf()
+```
+
+We use $BF > 10$ to identify the candidate SNPs:
+  
+```{r IdentificationThreshold}
+threshold <- 10 # in dB
+```
+
+Given this threshold, here are the candidate SNPs:
+
+```{r IdentifyCandidatesGivenThreshold}
+cand <- list_out %>% 
+  lapply(function(out)out$snp_out[which(out$snp_out$medianBF>threshold),]) %>%  
+  bind_rows()
+
+cand %>% kable_mydf()
+```
+
+Are there any SNPs associated with several climatic variables?
+
+```{r IdentifyDuplicates}
+# Identify duplicates
+cand %>% group_by(snp) %>% filter(n()>1) %>% kable_mydf()
+```
+
+1 SNP is associated with three climatic variables.
+
+We export the list of candidate SNPs (`r unique(cand$snp) %>%  length()` SNPs).
+
+```{r ExportCandidateSNPs}
+unique(cand$snp) %>% saveRDS(here("outputs/BayPass/baypass_outliers.rds"))
 ```
 
 
