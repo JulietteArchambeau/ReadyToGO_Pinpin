@@ -35,5 +35,7 @@
 -   [GeneratingSetCandidateSNPs.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/GeneratingSetCandidateSNPs.html) Identifying the common candidates across the different gene-environment association (GEA) methods and checking their genomic position. Selecting a set candidate SNPs that will be used to estimate the genomic offset.
 
 -   [GOpredictions_GF.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/GOpredictions_GF.html) Predicting genomic offset with Gradient Forest (GF).
+    
+    *  <a href="https://juliettearchambeau.github.io/ReadyToGO_Pinpin/GFplots.pdf" target="_blank">GFplots.pdf</a>: (1) predictor overall importance plots, (2) splits density plots, (3) species (in our case alleles) cumulative plots, (4) predictor cumulative plots and (5) $\mathcal{R}^2$ measure of the fit of the random forest model for each SNPs.
 
 -   [GOpredictions_GDM.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/GOpredictions_GDM.html) Predicting genomic offset with Generalized Dissimilarity Modelling (GDM).
