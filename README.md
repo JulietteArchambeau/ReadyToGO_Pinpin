@@ -33,3 +33,7 @@
 -   [IdentificationCandidateSNPs_GF.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/IdentificationCandidateSNPs_GF.html) Identifying candidate SNPs with Gradient Forest (GF).
 
 -   [GeneratingSetCandidateSNPs.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/GeneratingSetCandidateSNPs.html) Identifying the common candidates across the different gene-environment association (GEA) methods and checking their genomic position. Selecting a set candidate SNPs that will be used to estimate the genomic offset.
+
+-   [GOpredictions_GF.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/GOpredictions_GF.html) Predicting genomic offset with Gradient Forest (GF).
+
+-   [GOpredictions_GDM.html](https://juliettearchambeau.github.io/ReadyToGO_Pinpin/GOpredictions_GDM.html) Predicting genomic offset with Generalized Dissimilarity Modelling (GDM).
