@@ -216,3 +216,8 @@ common_snps <- setdiff(common_snps, snp_to_remove)
 ```
 
 <span style="color: red;">After keeping only one candidate SNPs per scaffold, we get `r length(common_snps)` candidate SNPs.</span>
+
+```{r SaveCandidateSNPs}
+common_snps %>% saveRDS(here("outputs/candidate_snps.rds"))
+```
+

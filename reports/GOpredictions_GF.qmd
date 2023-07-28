@@ -1,0 +1,316 @@
+---
+title: "Gradient Forest - Genomic offset predictions"
+author: "Juliette Archambeau & Adélaïde Theraroz"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format: 
+  html:
+    toc: true
+    toc-depth: 4
+    code-fold: true
+    page-layout: full
+embed-resources: true
+bibliography: references.bib
+editor_options: 
+  chunk_output_type: console
+---
+
+<style type="text/css">
+body {
+   font-size: 15px;
+}
+code.r{
+  font-size: 11px;
+}
+pre {
+  font-size: 11px
+}
+
+table {
+  font-size: 11px
+}
+</style>
+
+```{r setup, include=F}
+knitr::opts_chunk$set(dev.args = list(png = list(type = "cairo")))
+knitr::opts_chunk$set(cache=F, size="tiny")
+options(width = 300)
+library(knitr)      # CRAN v1.26
+library(kableExtra) # CRAN v1.1.0
+library(tidyverse)
+library(gradientForest)
+library(here)
+library(cowplot)
+library(magrittr)
+library(rnaturalearthdata)
+library(rnaturalearth)
+library(sf)
+library(here)
+library(raster)
+library(RColorBrewer)
+library(pdist)
+library(corrplot)
+
+# my own function for building tables in reports
+source(here("scripts/functions/kable_mydf.R"))
+source(here("scripts/functions/extract_climatedt_metadata.R")) # extracting meta data of the climatic variables in ClimateDT
+```
+
+
+
+
+# Introduction
+
+R code based on [the github repository](https://github.com/fitzLab-AL/geneticOffsetR) associated with @fitzpatrick2021experimental. 
+
+
+# Data
+
+> Genomic data
+
+```{r LoadData}
+# Population-based allele frequencies
+# ===================================
+geno <- read.csv(here("data/genomic_data/imputed_allele_frequencies_withoutmaf.csv"),
+                 row.names = 1)
+
+# SNP sets
+# ========
+cand <- readRDS(here("outputs/candidate_snps.rds")) %>% 
+  str_replace("[-]",".") # we change the name of the SNPs so that they are valid R column names
+```
+
+> Climatic data
+
+```{r LoadClimaticData}
+# Set of climatic variables
+# =========================
+clim_var <- c("bio1","bio12","bio15","bio3","bio4","SHM")
+
+
+# Climatic data
+# =============
+# we scale the past and future climatic data at the location of the populations
+# with the parameters (mean and variance) of the past climatic data.
+source(here("scripts/functions/generate_scaled_clim_datasets.R"))
+clim_dfs <- generate_scaled_clim_datasets(clim_var)
+```
+
+# Running GF models
+
+```{r RunGF, message=F, results="hide"}
+# Warning! Important to sort the SNP names, otherwise
+  # the colors in the species (allele) cumulative plots 
+  # do not correspond to the right alleles
+geno_sub <- geno %>% dplyr::select(all_of(sort(cand)))
+
+gf_mod <- gradientForest(data.frame(clim_dfs$clim_ref[,-1], geno_sub), 
+                         predictor.vars=clim_var, 
+                         response.vars=colnames(geno_sub), 
+                         corr.threshold=0.5, 
+                         ntree=500, 
+                         trace=T)
+```
+
+Number of alleles for which the climatic variables have some predictive power: `r gf_mod$species.pos.rsq` SNPs.
+
+We generate some plots to evaluate the GF models (stored in the files `GFplots.pdf`):
+
+  - **Predictor overall importance plots**. They show the mean accuracy importance and the mean importance weighted by SNPs $\mathcal{R}^2$.
+  
+  - **Splits density plots**. They show the binned split importance and location on each gradient (spikes), kernel density of splits (blacklines), of observations (red lines) and of splits standardised by observations density (bluelines). Each distribution integrates to predictor importance. These show where important changes in the abundance of multiple alleles are occurring along the gradient; they indicate a composition change rate.
+
+  - **Species** (in our case alleles) **cumulative plots**. They show, for each SNPs, the cumulative importance distributions of splits improvement scaled by $\mathcal{R}^2$ weighted importance, and standardised by density of observations. These show cumulative change in the presence of individual allele, where changes occur on the gradient, and the alleles changing most on each gradient.
+
+  - **Predictor cumulative plots**. They show, for each predictor, the cumulative importance distributions of splits improvement scaled by $\mathcal{R}^2$ weighted importance, and standardised by density of observations, averaged over all SNPs. These show cumulative change in overall allelic composition, and where changes occur on the gradient.
+  
+  - $\mathcal{R}^2$ **measure of the fit** of the random forest model for each SNPs.
+  
+The code to generate those plots comes from 'Example analysis of biodiversity survey data with R package `gradientForest`' by C. Roland Pitcher, Nick Ellis and Stephen J. Smith ([pdf available here](https://gradientforest.r-forge.r-project.org/biodiversity-survey.pdf)).
+
+```{r GenerateGFplots, results="hide"}
+# ==============================
+# Functions to make the GF plots
+# ==============================
+
+# splits density plot
+make_split_density_plot <- function(x){
+
+  plot(x,plot.type="S",
+       imp.vars=names(importance(x)),
+       leg.posn="topright",
+       cex.legend=1,
+       cex.axis=1, 
+       cex.lab=1.2,
+       line.ylab=0.9,
+       par.args=list(mgp=c(1.5, 0.5,0),mar=c(3.1,1.5,0.1,1),omi = c(0.1, 0.3, 0.1, 0.1)))
+  
+  }
+
+# predictor cumulative plot
+make_predictor_cumulative_plot <- function(x){
+  
+  plot(x, plot.type="C",
+       imp.vars=names(importance(x)),
+       show.species=F,common.scale=T,
+       cex.axis=1, 
+       cex.lab=1.5,
+       line.ylab=1,
+       par.args=list(mgp=c(1.5, 0.5,0),mar=c(2.5,1,0.1,0.5),omi=c(0, +0.3,0,0)))}
+
+
+# species cumulative plot
+make_species_cumulative_plot <- function(x){
+  
+  plot(x,
+     plot.type="C",imp.vars=names(importance(x)), 
+     show.overall=F,legend=T,leg.posn="topleft", 
+     leg.nspecies=10,
+     cex.lab=1,
+     cex.legend=1, 
+     cex.axis=1,
+     line.ylab=1,
+     par.args=list(mgp=c(1.5, 0.5,0),mar=c(2.5,1,0.1,0.5),omi=c(0, +0.3,0,0)))
+  }
+
+
+# R2 measure of the fit of the random forest model for each species
+make_performance_plot <- function(x, horizontal=FALSE){
+
+    old.mar<-par()$mar
+    par(mfrow=c(1,1),mar=old.mar+c(0,0,0,0))
+    Ylab <- expression(R^2)
+
+    perf <- importance(x, type="Species")
+    n <- length(perf)
+    if (horizontal)
+      plot(perf, 1:n, las = 2, pch=19, axes=F, xlab="", ylab="")
+    else
+      plot(1:n, perf, las = 2, pch=19, axes=F, xlab="", ylab="")
+    axis(labels= names(perf),side=1+horizontal,at=1:n, cex.axis=0.7, padj=0,las=2)
+    axis(side=2-horizontal, cex.axis=1)
+    mtext(Ylab,side=2-horizontal,line=2)
+    title("Overall performance of random forests over loci")
+    abline(h = 0, lty = 2)
+    box()
+    par(mar=old.mar)
+
+}
+
+# ===============================================
+# Generate the GF plots for the Github repository
+# ===============================================
+pdf(here(paste0("figs/GF/GFplots.pdf")), width=12,height=8)
+
+# Overall importance plot
+plot(gf_mod, plot.type="Overall.Importance")
+
+# splits density plot
+make_split_density_plot(x=gf_mod)
+
+# species cumulative plot
+make_species_cumulative_plot(x=gf_mod)
+
+# predictor cumulative plot
+make_predictor_cumulative_plot(x=gf_mod)
+
+# R2 measure of the fit of the random forest model for each species
+make_performance_plot(x=gf_mod)
+
+dev.off()
+```
+
+# GO predictions
+
+```{r PredictGOpops}
+go <- lapply(clim_dfs$clim_pred, function(clim_pred){
+
+ref_pred <- predict(gf_mod) # predictions under current climates
+fut_pred <- predict(gf_mod, as.data.frame(clim_pred[,clim_var])) # predictions under future climates
+
+
+lapply(1:nrow(ref_pred), function(x, ref_pred, fut_pred){
+    as.numeric(pdist(ref_pred[x,],  fut_pred[x,])@dist)}, fut_pred=fut_pred, ref_pred=ref_pred) %>% 
+  unlist()
+
+})
+```
+
+
+## Relationship with Euclidean distance
+
+```{r MakeEuclideanDistancePlots}
+source(here("scripts/functions/make_eucli_plot.R"))
+
+# Calculate the Euclidean climatic distance
+list_dist_env <- clim_dfs$clim_pred %>% lapply(function(clim_pred){
+  
+Delta = clim_dfs$clim_ref %>% dplyr::select(any_of(clim_var)) - clim_pred %>% dplyr::select(any_of(clim_var)) 
+dist_env = sqrt( rowSums(Delta^2) )
+
+})
+
+# Main gene pools (for the figures)
+gps <- readRDS(here("data/genomic_data/main_gp_info.rds"))[[1]] %>% 
+  arrange(Population)
+```
+
+```{r MakeEucliPlots, fig.width=7, results="hide"}
+par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
+
+lapply(names(list_dist_env), function(gcm){
+  
+make_eucli_plot(
+  X = list_dist_env[[gcm]],
+  Y = go[[gcm]],
+  colors = gps$main_gp_pop_color,
+  color_names = gps$main_gp_pop,
+  ylab = "GDM genomic offset",
+  inset=c(-0.4,0),
+  legend_position="right",
+  plot_title = gcm)
+
+})
+```
+
+
+### Maps
+
+```{r MakeGomaps, fig.width=12, fig.height=7, results="hide", warning=F}
+# Function to make the genomic offset maps
+source(here("scripts/functions/make_go_map.R"))
+
+# Population coordinates
+pop_coord <- read_csv(here("data/selected_populations_GOanalyses.csv"), show_col_types = FALSE) %>%
+  dplyr::select(pop ,longitude, latitude)
+
+# Find minimum and maximum values of genomic offset for the maps
+go_limits <- lapply(names(list_dist_env), function(gcm){go[[gcm]]}) %>%  unlist() %>% range()
+# The minimum GO value is very very small, almost zero, so we fix it to zero.
+go_limits[[1]] <- 0
+
+
+# Generate the maps for each set of SNPs and each GCM
+go_maps <- lapply(names(list_dist_env), function(gcm){
+  
+make_go_map(dfcoord=pop_coord,
+            snp_set=cand,
+            gcm=gcm,
+            ggtitle=gcm,
+            go_limits=go_limits,
+            point_size = 2)
+
+})
+
+legend_maps  <- get_legend(go_maps[[1]])
+
+go_maps <- lapply(go_maps, function(y) y + theme(legend.position = "none"))
+
+go_maps$legend_maps <- legend_maps
+
+go_maps <- plot_grid(plotlist=go_maps)
+
+# We can save the figures for the Supplementary Information
+ggsave(here("figs/GF/GOMaps_PopLocations_SI.pdf"), go_maps, width=10,height=6, device="pdf")
+
+go_maps
+```
