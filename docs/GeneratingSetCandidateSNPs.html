@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Juliette Archambeau &amp; Adélaïde Theraroz">
-<meta name="dcterms.date" content="2023-07-27">
+<meta name="dcterms.date" content="2023-07-28">
 
 <title>Identifying a set of candidate SNPs</title>
 <style>
@@ -2886,7 +2886,7 @@ border: 0;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 27, 2023</p>
+      <p class="date">July 28, 2023</p>
     </div>
   </div>
     
@@ -4103,6 +4103,12 @@ font-size: 10px
 </details>
 </div>
 <p><span style="color: red;">After keeping only one candidate SNPs per scaffold, we get 73 candidate SNPs.</span></p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>common_snps <span class="sc">%&gt;%</span> <span class="fu">saveRDS</span>(<span class="fu">here</span>(<span class="st">&quot;outputs/candidate_snps.rds&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
 
 </section>
 
