@@ -2,14 +2,13 @@ library(rnaturalearth)
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
 make_go_map <- function(dfcoord, 
-                        snp_set, 
+                        go,
                         point_size=2, 
                         x_limits = c(-10, 13),
                         y_limits = c(31, 49),
                         legend_position = "right",
                         legend_box_background = "white",# "gray80"
                         go_limits=NULL,
-                        ggtitle=NULL,
                         gcm){
   
 

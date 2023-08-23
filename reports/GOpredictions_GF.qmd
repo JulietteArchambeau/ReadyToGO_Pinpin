@@ -293,9 +293,8 @@ go_limits[[1]] <- 0
 go_maps <- lapply(names(list_dist_env), function(gcm){
   
 make_go_map(dfcoord=pop_coord,
-            snp_set=cand,
             gcm=gcm,
-            ggtitle=gcm,
+            go=go,
             go_limits=go_limits,
             point_size = 2)
 
@@ -314,3 +313,25 @@ ggsave(here("figs/GF/GOMaps_PopLocations_SI.pdf"), go_maps, width=10,height=6, d
 
 go_maps
 ```
+
+Let's average the predictions across the five GCMs and generate a map. 
+
+```{r AvgPredictions, fig.width=6, fig.height=4}
+go_mean <- go %>% 
+  bind_rows() %>% 
+  mutate(go_mean=rowMeans(.)) %>% 
+  pull(go_mean)
+go_mean <- list("Avegerage genomic offset predictions across GCMs" = go_mean)
+
+p <- make_go_map(dfcoord=pop_coord,
+            gcm="Avegerage genomic offset predictions across GCMs",
+            go=go_mean,
+            go_limits=go_limits,
+            point_size = 2)
+
+# We can save the figure
+ggsave(here("figs/GF/GOMaps_PopLocations_Avg.pdf"), p, width=6,height=4, device="pdf")
+
+p 
+```
+
